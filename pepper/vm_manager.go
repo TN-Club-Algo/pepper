@@ -46,6 +46,13 @@ func StartVM(folder string) {
 	strings.Replace(config, "fc0", hostDevName, 1)                               // host network name
 	strings.Replace(config, "fill_initrd", folder, 1)                            // initrd location
 
+	// Share user's program and test program using initrd
+	err = createDisk(hostDevName, folder)
+	if err != nil {
+		return
+	}
+	exec.Command("cd root/" + folder + " ; find . -print0 | cpio --null --create --verbose --format=newc > " + hostDevName + ".cpio")
+
 	// Create firecracker VM
 	configFile := "temp_vm_config_" + address + ".json"
 	socket := "/tmp/firecracker" + strings.Replace(address, ".", "-", -1) + ".socket"
@@ -58,12 +65,6 @@ func StartVM(folder string) {
 	// Set host network
 	exec.Command("ip addr add " + address + "/32 dev " + hostDevName)
 	exec.Command("ip link set " + hostDevName + " up")
-
-	// Share user's program and test program using initrd
-	err = createDisk(hostDevName, folder)
-	if err != nil {
-		return
-	}
 
 	// Move user's program to container user and change permissions
 	key, _ := os.ReadFile("/root/.ssh/id_rsa")
@@ -113,7 +114,6 @@ func createDisk(name string, folder string) error {
 		}
 	}
 
-	exec.Command("cd root/" + folder + " ; find . -print0 | cpio --null --create --verbose --format=newc > " + name + ".cpio")
 	return nil
 }
 

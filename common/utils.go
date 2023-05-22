@@ -1,7 +1,7 @@
 package common
 
 const (
-	RestPort      int32  = 8080
+	RestPort      int64  = 8080
 	InputEndpoint string = "/input"
 	InitEndPoint  string = "/init"
 )

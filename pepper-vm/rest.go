@@ -4,6 +4,7 @@ import (
 	"AlgoTN/common"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 )
 
 func StartREST() {
@@ -12,7 +13,7 @@ func StartREST() {
 	router.PUT(common.InputEndpoint, receiveInput)
 	router.PUT(common.InitEndPoint, initTests)
 
-	err := router.Run("localhost:" + string(common.RestPort))
+	err := router.Run(":" + strconv.FormatInt(common.RestPort, 10))
 	if err != nil {
 		return
 	}

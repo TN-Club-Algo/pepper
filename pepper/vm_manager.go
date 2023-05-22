@@ -81,6 +81,10 @@ func StartVM(folder string) {
 	session.Run("chgrp -R container /home/container")
 	session.Run("chmod -R 500 /home/container") // execute and read
 
+	// mount the needed files (user program and pepper)
+	session.Run("mkdir /mnt")
+	session.Run("mount /dev/vdb /mnt")
+
 	// Start pepper-vm
 	session.Run("./pepper-vm")
 

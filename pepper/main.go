@@ -7,8 +7,7 @@ func main() {
 	var cmd string
 	for {
 		_, err := fmt.Scanln(&cmd)
-		if err != nil {
-			fmt.Println(cmd)
+		if err == nil {
 			if cmd == "startvm" {
 				StartVM("/root/test-vm")
 			}

@@ -45,10 +45,10 @@ func StartVM(folder string) {
 
 	config := string(b)
 	// new mac address is the ip address in hex and 00 00 at the end
-	strings.Replace(config, "AA:BB:CC:DD:EE:FF", ipv4ToHex(address)+":00:00", 1) // mac address
-	strings.Replace(config, "2048", "2048", 1)                                   // ram
-	strings.Replace(config, "fc0", hostDevName, 1)                               // host network name
-	strings.Replace(config, "fill_initrd", folder, 1)                            // initrd location
+	config = strings.Replace(config, "AA:BB:CC:DD:EE:FF", ipv4ToHex(address)+":00:00", 1)    // mac address
+	config = strings.Replace(config, "2048", "2048", 1)                                      // ram
+	config = strings.Replace(config, "fc0", hostDevName, 1)                                  // host network name
+	config = strings.Replace(config, "/root/fc1-disk.ext4", "/root/"+hostDevName+".ext4", 1) // initrd location
 
 	fmt.Println("Temp config adjusted.")
 

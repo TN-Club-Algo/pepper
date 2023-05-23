@@ -25,6 +25,8 @@ var (
 func init() {
 	vmAddresses = make(map[string]string)
 	usedIps = make([]string, 20)
+
+	StartVM("/root/test-vm") // test
 }
 
 func StartVM(folder string) {

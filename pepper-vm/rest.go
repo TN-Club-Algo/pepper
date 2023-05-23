@@ -33,5 +33,10 @@ func receiveInput(c *gin.Context) {
 }
 
 func initTests(c *gin.Context) {
+	testType := c.Request.URL.Query().Get("testType")
+	switch testType {
+	case "input/output":
+
+	}
 	c.IndentedJSON(http.StatusOK, nil)
 }

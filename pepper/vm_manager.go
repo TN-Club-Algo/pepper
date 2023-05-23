@@ -50,6 +50,8 @@ func StartVM(folder string) {
 	config = strings.Replace(config, "fc0", hostDevName, 1)                                  // host network name
 	config = strings.Replace(config, "/root/fc1-disk.ext4", "/root/"+hostDevName+".ext4", 1) // initrd location
 
+	defer os.Remove("/root/" + hostDevName + ".ext4")
+
 	fmt.Println("Temp config adjusted.")
 
 	// Share user's program and test program using initrd
@@ -65,6 +67,7 @@ func StartVM(folder string) {
 	configFile := "temp_vm_config_" + address + ".json"
 	socket := "/tmp/firecracker" + strings.Replace(address, ".", "-", -1) + ".socket"
 	err = os.WriteFile(configFile, []byte(config), 0600)
+	defer os.Remove(configFile)
 	if err != nil {
 		return
 	}

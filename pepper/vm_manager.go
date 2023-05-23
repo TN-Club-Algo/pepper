@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 )
 
@@ -112,11 +111,6 @@ func StartVM(folder string) {
 }
 
 func createDisk(name string, folder string) error {
-	programPath := filepath.Join(folder, "init")
-	if err := os.Mkdir(programPath, os.ModePerm); err != nil {
-		return err
-	}
-
 	exec.Command("dd if=/dev/zero of=" + name + ".ext4 bs=1M count=20")
 	exec.Command("mkfs.ext4 " + name + ".ext4")
 	exec.Command("mkdir /tmp/" + name)
@@ -124,7 +118,7 @@ func createDisk(name string, folder string) error {
 	exec.Command("cp -r " + folder + " /tmp/" + name)
 	exec.Command("sudo umount /tmp/" + name)
 
-	filesToMove := []string{"/root/pepper-vm"}
+	/*filesToMove := []string{"/root/pepper-vm"}
 	for _, fileToMove := range filesToMove {
 		srcPath := fileToMove
 		destPath := filepath.Join(programPath, fileToMove)
@@ -132,7 +126,7 @@ func createDisk(name string, folder string) error {
 		if err := os.Rename(srcPath, destPath); err != nil {
 			return err
 		}
-	}
+	}*/
 
 	return nil
 }

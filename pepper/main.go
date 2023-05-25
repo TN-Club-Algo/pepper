@@ -7,6 +7,7 @@ import (
 
 func main() {
 	//Connect("127.0.0.1", "")
+	fmt.Println("Pepper initialized, type 'help' for a list of commands.")
 	var cmd string
 	for {
 		_, err := fmt.Scanln(&cmd)

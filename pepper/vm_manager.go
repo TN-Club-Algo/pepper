@@ -64,9 +64,9 @@ func StartVM(folder string) {
 	fmt.Println("Temp disk created with user program and pepper-vm.")
 
 	// Create firecracker VM config
-	configFile := "temp_vm_config_" + address + ".json"
+	configFile := "temp_vm_config_" + hostDevName + ".json"
 	err = os.WriteFile(configFile, []byte(config), 0600)
-	defer os.Remove(configFile)
+	//defer os.Remove(configFile)
 	if err != nil {
 		return
 	}

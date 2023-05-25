@@ -63,9 +63,8 @@ func StartVM(folder string) {
 
 	fmt.Println("Temp disk created with user program and pepper-vm.")
 
-	// Create firecracker VM
+	// Create firecracker VM config
 	configFile := "temp_vm_config_" + address + ".json"
-	socket := "/tmp/firecracker" + strings.Replace(address, ".", "-", -1) + ".socket"
 	err = os.WriteFile(configFile, []byte(config), 0600)
 	defer os.Remove(configFile)
 	if err != nil {
@@ -74,6 +73,8 @@ func StartVM(folder string) {
 
 	fmt.Println("Starting Firecracker VM...")
 
+	// Start firecracker VM
+	socket := "/tmp/firecracker" + strings.Replace(address, ".", "-", -1) + ".socket"
 	exec.Command("firecracker-bin", "--api-sock "+socket, "--config-file "+configFile)
 
 	fmt.Println("Firecracker VM started!")

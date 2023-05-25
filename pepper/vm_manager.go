@@ -121,7 +121,7 @@ func createDisk(name string, folder string) error {
 	cmd = exec.Command("mkfs.ext4", name+".ext4")
 	fmt.Println(cmd.Stdout)
 	fmt.Println(cmd.Err)
-	cmd = exec.Command("mkdir ", "/tmp/"+name)
+	cmd = exec.Command("mkdir", "/tmp/"+name)
 	fmt.Println(cmd.Stdout)
 	fmt.Println(cmd.Err)
 	cmd = exec.Command("sudo mount " + name + ".ext4 /tmp/" + name)

@@ -115,12 +115,18 @@ func StartVM(folder string) {
 }
 
 func createDisk(name string, folder string) error {
-	exec.Command("dd", "if=/dev/zero of="+name+".ext4 bs=1M count=20")
-	exec.Command("mkfs.ext4", name+".ext4")
-	exec.Command("mkdir ", "/tmp/"+name)
-	exec.Command("sudo mount " + name + ".ext4 /tmp/" + name)
-	exec.Command("cp -r " + folder + " /tmp/" + name)
-	exec.Command("sudo umount /tmp/" + name)
+	cmd := exec.Command("dd", "if=/dev/zero of="+name+".ext4 bs=1M count=20")
+	fmt.Println(cmd.Err)
+	cmd = exec.Command("mkfs.ext4", name+".ext4")
+	fmt.Println(cmd.Err)
+	cmd = exec.Command("mkdir ", "/tmp/"+name)
+	fmt.Println(cmd.Err)
+	cmd = exec.Command("sudo mount " + name + ".ext4 /tmp/" + name)
+	fmt.Println(cmd.Err)
+	cmd = exec.Command("cp -r " + folder + " /tmp/" + name)
+	fmt.Println(cmd.Err)
+	cmd = exec.Command("sudo umount /tmp/" + name)
+	fmt.Println(cmd.Err)
 
 	/*filesToMove := []string{"/root/pepper-vm"}
 	for _, fileToMove := range filesToMove {

@@ -50,7 +50,7 @@ func StartVM(folder string) {
 	config = strings.Replace(config, "fc0", hostDevName, 1)                                  // host network name
 	config = strings.Replace(config, "/root/fc1-disk.ext4", "/root/"+hostDevName+".ext4", 1) // initrd location
 
-	defer os.Remove("/root/" + hostDevName + ".ext4")
+	//defer os.Remove("/root/" + hostDevName + ".ext4")
 
 	fmt.Println("Temp config adjusted.")
 

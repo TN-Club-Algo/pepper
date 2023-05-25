@@ -75,13 +75,13 @@ func StartVM(folder string) {
 
 	// Start firecracker VM
 	socket := "/tmp/firecracker" + strings.Replace(address, ".", "-", -1) + ".socket"
-	exec.Command("firecracker-bin", "--api-sock "+socket, "--config-file "+configFile)
+	exec.Command("firecracker-bin", "--api-sock", socket, "--config-file", configFile)
 
 	fmt.Println("Firecracker VM started!")
 
 	// Set host network
-	exec.Command("ip addr add " + address + "/32 dev " + hostDevName)
-	exec.Command("ip link set " + hostDevName + " up")
+	exec.Command("ip", "addr", "add", address+"/32", "dev", hostDevName)
+	exec.Command("ip", "link", "set", hostDevName, "up")
 
 	// Move user's program to container user and change permissions
 	key, _ := os.ReadFile("/root/.ssh/id_rsa")
@@ -115,22 +115,32 @@ func StartVM(folder string) {
 }
 
 func createDisk(name string, folder string) error {
-	cmd := exec.Command("dd if=/dev/zero of=" + name + ".ext4 bs=1M count=20")
+	cmd := exec.Command("dd", "if=/dev/zero", "of="+name+".ext4", "bs=1M", "count=20")
+	err := cmd.Run()
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
 	fmt.Println(cmd.Stdout)
 	fmt.Println(cmd.Err)
 	cmd = exec.Command("mkfs.ext4", name+".ext4")
+	cmd.Run()
 	fmt.Println(cmd.Stdout)
 	fmt.Println(cmd.Err)
 	cmd = exec.Command("mkdir", "-p", "/tmp/"+name)
+	cmd.Run()
 	fmt.Println(cmd.Stdout)
 	fmt.Println(cmd.Err)
 	cmd = exec.Command("mount", name+".ext4", "/tmp/"+name)
+	cmd.Run()
 	fmt.Println(cmd.Stdout)
 	fmt.Println(cmd.Err)
 	cmd = exec.Command("cp", "-r", folder, "/tmp/"+name)
+	cmd.Run()
 	fmt.Println(cmd.Stdout)
 	fmt.Println(cmd.Err)
 	cmd = exec.Command("sudo umount /tmp/" + name)
+	cmd.Run()
 	fmt.Println(cmd.Stdout)
 	fmt.Println(cmd.Err)
 

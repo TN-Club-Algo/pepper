@@ -100,7 +100,7 @@ func StartVM(folder string) {
 	session.Run("chmod -R 500 /home/container") // execute and read
 
 	// mount the needed files (user program and pepper)
-	session.Run("mkdir /mnt")
+	session.Run("mkdir -p /mnt")
 	session.Run("mount /dev/vdb /mnt")
 
 	// Start pepper-vm
@@ -139,7 +139,7 @@ func createDisk(name string, folder string) error {
 	cmd.Run()
 	fmt.Println(cmd.Stdout)
 	fmt.Println(cmd.Err)
-	cmd = exec.Command("sudo umount /tmp/" + name)
+	cmd = exec.Command("umount", "/tmp/"+name)
 	cmd.Run()
 	fmt.Println(cmd.Stdout)
 	fmt.Println(cmd.Err)

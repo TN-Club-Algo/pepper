@@ -135,7 +135,7 @@ func createDisk(name string, folder string) error {
 	cmd.Run()
 	fmt.Println(cmd.Stdout)
 	fmt.Println(cmd.Err)
-	cmd = exec.Command("cp", "-r", folder, "/tmp/"+name)
+	cmd = exec.Command("cp", "-a", folder+"/.", "/tmp/"+name)
 	cmd.Run()
 	fmt.Println(cmd.Stdout)
 	fmt.Println(cmd.Err)

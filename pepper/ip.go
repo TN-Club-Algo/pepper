@@ -4,7 +4,6 @@ import (
 	"AlgoTN/common"
 	"fmt"
 	"net"
-	"strconv"
 	"strings"
 )
 
@@ -23,7 +22,7 @@ func ipv4ToHex(ipString string) string {
 
 	hexIP := make([]string, 4)
 	for i, octet := range ip {
-		hexIP[i] = strconv.FormatInt(int64(octet), 16)
+		hexIP[i] = fmt.Sprintf("%02x", octet)
 	}
 
 	return strings.Join(hexIP, ":")

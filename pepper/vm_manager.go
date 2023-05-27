@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const (
@@ -114,7 +115,6 @@ func StartVM(folder string) {
 	}
 
 	err = exec.Command("/root/firecracker-bin", "--api-sock", socket, "--config-file", configFile).Start()
-	//err = exec.Command("screen", "-dmS", hostDevName, "/root/firecracker-bin --api-sock "+socket+" --config-file "+configFile).Run()
 	if err != nil {
 		fmt.Println("Error starting firecracker VM:", err)
 		return
@@ -125,12 +125,38 @@ func StartVM(folder string) {
 	// Move user's program to container user and change permissions
 	key, _ := os.ReadFile("/root/.ssh/id_rsa")
 	signer, err := ssh.ParsePrivateKey(key)
-	conn, err := ssh.Dial("tcp", fcAddress+":22", &ssh.ClientConfig{
-		User: "root",
-		Auth: []ssh.AuthMethod{
-			ssh.PublicKeys(signer),
-		},
-	})
+
+	var conn *ssh.Client
+
+	if err != nil {
+		fmt.Println("Error creating ssh connection:", err)
+		return
+	}
+
+	maxAttempts := 5
+	attempt := 1
+	for attempt <= maxAttempts {
+		time.Sleep(1 * time.Second) // Wait for a few seconds before attempting SSH connection
+
+		conn, err = ssh.Dial("tcp", fcAddress+":22", &ssh.ClientConfig{
+			User: "root",
+			Auth: []ssh.AuthMethod{
+				ssh.PublicKeys(signer),
+			},
+			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		})
+
+		if err == nil {
+			break // SSH connection successful, break out of the loop
+		}
+
+		attempt++
+	}
+
+	if attempt > maxAttempts {
+		fmt.Println("Error creating ssh connection:", err)
+		return
+	}
 
 	// we'll need to wait for the VM to be ready
 	session, _ := conn.NewSession()

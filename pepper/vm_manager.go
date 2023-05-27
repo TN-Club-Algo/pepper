@@ -165,11 +165,11 @@ func StartVM(folder string) {
 	commands := []string{
 		"mkdir -p /mnt",
 		"mount /dev/vdb /mnt",
-		"mv /mnt/* /root/",
-		"mv /root/program /home/container/program",
-		"chown -R container /home/container",
-		"chgrp -R container /home/container",
-		"chmod -R 500 /home/container",
+		"mv /mnt/* /root/ 2>/dev/null",
+		"mv /root/program /home/container/program 2>/dev/null",
+		"chown -R container /home/container 2>/dev/null",
+		"chgrp -R container /home/container 2>/dev/null",
+		"chmod -R 500 /home/container 2>/dev/null",
 		"/root/pepper-vm",
 	}
 	command := strings.Join(commands, "; ")
@@ -195,28 +195,37 @@ func createDisk(name string, folder string) error {
 		fmt.Println(err)
 		return err
 	}
-	fmt.Println(cmd.Stdout)
-	fmt.Println(cmd.Err)
 	cmd = exec.Command("mkfs.ext4", name+".ext4")
-	cmd.Run()
-	fmt.Println(cmd.Stdout)
-	fmt.Println(cmd.Err)
+	err = cmd.Run()
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
 	cmd = exec.Command("mkdir", "-p", "/tmp/"+name)
-	cmd.Run()
-	fmt.Println(cmd.Stdout)
-	fmt.Println(cmd.Err)
+	err = cmd.Run()
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
 	cmd = exec.Command("mount", name+".ext4", "/tmp/"+name)
-	cmd.Run()
-	fmt.Println(cmd.Stdout)
-	fmt.Println(cmd.Err)
+	err = cmd.Run()
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
 	cmd = exec.Command("cp", "-a", folder+"/.", "/tmp/"+name)
-	cmd.Run()
-	fmt.Println(cmd.Stdout)
-	fmt.Println(cmd.Err)
+	fmt.Println("cp -a", folder+"/.", "/tmp/"+name)
+	err = cmd.Run()
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
 	cmd = exec.Command("umount", "/tmp/"+name)
-	cmd.Run()
-	fmt.Println(cmd.Stdout)
-	fmt.Println(cmd.Err)
+	err = cmd.Run()
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
 
 	/*filesToMove := []string{"/root/pepper-vm"}
 	for _, fileToMove := range filesToMove {

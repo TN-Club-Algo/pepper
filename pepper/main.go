@@ -16,6 +16,7 @@ func main() {
 			if strings.HasPrefix(cmd, "startvm") {
 				split := strings.Split(cmd, " ")
 				if len(split) != 2 {
+					fmt.Println("Starting test VM...")
 					StartVM("/root/test-vm")
 					continue
 				}

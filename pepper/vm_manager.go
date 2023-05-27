@@ -82,7 +82,7 @@ func StartVM(folder string) {
 		fmt.Println("Error removing socket:", err)
 		return
 	}
-	err = exec.Command("/root/firecracker-bin", "--api-sock", socket, "--config-file", configFile).Run()
+	err = exec.Command("/root/firecracker-bin", "--api-sock", socket, "--config-file", configFile).Start()
 	//err = exec.Command("screen", "-dmS", hostDevName, "/root/firecracker-bin --api-sock "+socket+" --config-file "+configFile).Run()
 	if err != nil {
 		fmt.Println("Error starting firecracker VM:", err)

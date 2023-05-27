@@ -3,9 +3,13 @@ package main
 import (
 	"AlgoTN/common"
 	"github.com/gin-gonic/gin"
+	"io"
 	"net/http"
+	"os/exec"
 	"strconv"
 )
+
+var inputDataChan = make(chan []byte)
 
 func StartREST() {
 	router := gin.Default()
@@ -27,16 +31,72 @@ func receiveInput(c *gin.Context) {
 		return
 	}
 
-	// Handle input
+	inputDataChan <- []byte(input.Input)
 
 	c.IndentedJSON(http.StatusOK, nil)
 }
 
 func initTests(c *gin.Context) {
-	testType := c.Request.URL.Query().Get("testType")
-	switch testType {
-	case "input/output":
+	testCount, _ := strconv.Atoi(c.Request.URL.Query().Get("testCount"))
+	vmInit := common.VmInit{
+		ProgramType: c.Request.URL.Query().Get("programType"),
+		UserProgram: c.Request.URL.Query().Get("userProgram"),
+		IsDirectory: c.Request.URL.Query().Get("isDirectory") == "true",
+		TestType:    c.Request.URL.Query().Get("testType"),
+		TestCount:   testCount,
+	}
+
+	// Compile program
+	go compileAndContinue(vmInit)
+
+	c.IndentedJSON(http.StatusOK, nil)
+}
+
+func compileAndContinue(vmInit common.VmInit) {
+	switch vmInit.ProgramType {
+	case common.JAVA:
+		// javac
+		exec.Command("javac", "$(find /home/container/program -name \"*.java\")")
+	case common.CPP:
+	case common.PYTHON:
+		// No compilation needed
+	case common.C:
 
 	}
-	c.IndentedJSON(http.StatusOK, nil)
+
+	go startTests(vmInit)
+}
+
+func startTests(vmInit common.VmInit) {
+	switch vmInit.TestType {
+	case common.TestTypeInputOutput:
+
+	}
+
+	for i := 0; i < vmInit.TestCount; i++ {
+		// Run test
+		switch vmInit.ProgramType {
+		case common.JAVA:
+
+		case common.CPP:
+		case common.PYTHON:
+			// python
+			if vmInit.TestType == common.TestTypeInputOutput {
+				cmd := exec.Command("python", vmInit.UserProgram) // let's assume it isn't a folder for now
+				inputData := <-inputDataChan
+				stdin, _ := cmd.StdinPipe()
+				_ = cmd.Start()
+				_, _ = stdin.Write(inputData)
+				stdin.Close()
+				pipe, _ := cmd.StdoutPipe()
+				output, _ := io.ReadAll(pipe)
+				_ = cmd.Wait()
+
+				// write output to file
+				exec.Command("touch", "/home/container/output.txt").Run()
+				exec.Command("echo", string(output), ">>", "/home/container/output.txt").Run()
+			}
+		case common.C:
+		}
+	}
 }

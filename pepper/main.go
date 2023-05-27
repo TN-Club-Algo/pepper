@@ -14,7 +14,12 @@ func main() {
 		_, err := fmt.Scanln(&cmd)
 		if err == nil {
 			if strings.HasPrefix(cmd, "startvm") {
-				folder := strings.Split(cmd, " ")[1]
+				split := strings.Split(cmd, " ")
+				if len(split) != 2 {
+					StartVM("/root/test-vm")
+					continue
+				}
+				folder := split[1]
 				fmt.Println("Starting VM with folder", folder, "...")
 				StartVM(folder)
 			} else if cmd == "exit" || cmd == "stop" {

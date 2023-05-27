@@ -76,6 +76,8 @@ func StartVM(folder string) {
 
 	// Start firecracker VM
 	socket := "/tmp/firecracker" + strings.Replace(address, ".", "-", -1) + ".socket"
+	// Remove socket if it exists
+	os.Remove(socket)
 	exec.Command("screen", "-dmS", hostDevName, "/root/firecracker-bin", "--api-sock", socket, "--config-file", configFile)
 
 	fmt.Println("Firecracker VM started!")

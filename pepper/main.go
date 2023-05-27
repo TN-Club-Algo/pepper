@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -12,9 +13,10 @@ func main() {
 	for {
 		_, err := fmt.Scanln(&cmd)
 		if err == nil {
-			if cmd == "startvm" {
-				fmt.Println("Starting VM...")
-				StartVM("/root/test-vm")
+			if strings.HasPrefix(cmd, "startvm") {
+				folder := strings.Split(cmd, " ")[1]
+				fmt.Println("Starting VM with folder", folder, "...")
+				StartVM(folder)
 			} else if cmd == "exit" || cmd == "stop" {
 				os.Exit(0)
 				return

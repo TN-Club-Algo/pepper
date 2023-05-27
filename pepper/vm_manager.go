@@ -199,7 +199,7 @@ func StartVM(folder string) {
 	}
 
 	// Start pepper-vm
-	err = session.Run("./pepper-vm")
+	err = session.Run("/root/pepper-vm")
 	if err != nil {
 		fmt.Println("Error starting pepper-vm:", err)
 		return

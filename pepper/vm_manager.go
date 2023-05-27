@@ -77,14 +77,14 @@ func StartVM(folder string) {
 	// Start firecracker VM
 	socket := "/tmp/firecracker" + strings.Replace(address, ".", "-", -1) + ".socket"
 	// Remove socket if it exists
-	os.Remove(socket)
-	exec.Command("screen", "-dmS", hostDevName, "/root/firecracker-bin", "--api-sock", socket, "--config-file", configFile)
+	exec.Command("rm", "-f", socket).Run()
+	exec.Command("screen", "-dmS", hostDevName, "/root/firecracker-bin --api-sock "+socket+" --config-file "+configFile).Run()
 
 	fmt.Println("Firecracker VM started!")
 
 	// Set host network
-	exec.Command("ip", "addr", "add", address+"/32", "dev", hostDevName)
-	exec.Command("ip", "link", "set", hostDevName, "up")
+	exec.Command("ip", "addr", "add", address+"/32", "dev", hostDevName).Run()
+	exec.Command("ip", "link", "set", hostDevName, "up").Run()
 
 	// Move user's program to container user and change permissions
 	key, _ := os.ReadFile("/root/.ssh/id_rsa")

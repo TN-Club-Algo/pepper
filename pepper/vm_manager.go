@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 )
 
@@ -75,7 +76,7 @@ func StartVM(folder string) {
 
 	// Start firecracker VM
 	socket := "/tmp/firecracker" + strings.Replace(address, ".", "-", -1) + ".socket"
-	exec.Command("/root/firecracker-bin", "--api-sock", socket, "--config-file", configFile)
+	exec.Command("screen", "-dmS", hostDevName, "/root/firecracker-bin", "--api-sock", socket, "--config-file", configFile)
 
 	fmt.Println("Firecracker VM started!")
 
@@ -110,8 +111,10 @@ func StartVM(folder string) {
 	conn.Close()
 
 	fmt.Println("Firecracker VM ready!")
+	vmAddresses[hostDevName] = address
 
 	// We are ready for tests, listen to the results
+	StartTest(hostDevName)
 }
 
 func createDisk(name string, folder string) error {
@@ -160,7 +163,20 @@ func createDisk(name string, folder string) error {
 func StartTest(vmID string) {
 	_, ok := vmAddresses[vmID]
 	if ok {
+		var request, _ = http.NewRequest("POST", vmAddresses[vmID]+":"+strconv.FormatInt(common.RestPort, 10)+common.InitEndPoint, nil)
 
+		request.Header.Set("Content-Type", "application/json; charset=UTF-8")
+		client := &http.Client{}
+		response, err := client.Do(request)
+		if err != nil {
+			panic(err)
+		}
+		defer func(Body io.ReadCloser) {
+			err := Body.Close()
+			if err != nil {
+				return
+			}
+		}(response.Body)
 	}
 }
 
@@ -168,7 +184,7 @@ func SendInput(vmID string, input string) {
 	var structInput = common.VmInput{ID: vmID, Input: input}
 
 	var result, _ = json.Marshal(structInput)
-	var request, _ = http.NewRequest("POST", vmAddresses[vmID]+":"+string(common.RestPort)+common.InputEndpoint, bytes.NewBuffer(result))
+	var request, _ = http.NewRequest("POST", vmAddresses[vmID]+":"+strconv.FormatInt(common.RestPort, 10)+common.InputEndpoint, bytes.NewBuffer(result))
 
 	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	client := &http.Client{}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"os/exec"
@@ -11,31 +12,38 @@ import (
 func tick() {
 	// List all sockets and check if they are reachable
 	folder := "/tmp"
-	files, err := os.ReadDir(folder)
+	ticker := time.NewTicker(5 * time.Second)
 
-	if err != nil {
-		return
-	}
+	for {
+		<-ticker.C
 
-	for _, file := range files {
-		if strings.HasPrefix(file.Name(), "firecracker") {
-			vmIp, _ := strings.CutPrefix(file.Name(), "firecracker")
-			vmIp, _ = strings.CutSuffix(vmIp, ".socket")
-
-			// Check if the VM is reachable
-			resultChan := make(chan bool)
-			go checkAPIReachability("https://"+vmIp+":8080", resultChan)
-
-			select {
-			case result := <-resultChan:
-				if !result {
-					removeVM(vmIp)
-				}
-			case <-time.After(5 * time.Second):
-				removeVM(vmIp)
-			}
-
+		files, err := os.ReadDir(folder)
+		if err != nil {
+			return
 		}
+
+		for _, file := range files {
+			if strings.HasPrefix(file.Name(), "firecracker") {
+				vmIp, _ := strings.CutPrefix(file.Name(), "firecracker")
+				vmIp, _ = strings.CutSuffix(vmIp, ".socket")
+
+				// Check if the VM is reachable
+				resultChan := make(chan bool)
+				go checkAPIReachability("http://"+vmIp+":8080", resultChan)
+
+				select {
+				case result := <-resultChan:
+					if !result {
+						removeVM(vmIp)
+					}
+					/*case <-time.After(5 * time.Second):
+					removeVM(vmIp)*/
+				}
+
+			}
+		}
+
+		ticker.Reset(5 * time.Second)
 	}
 }
 
@@ -43,13 +51,13 @@ func removeVM(vmIP string) {
 	// Remove process associated with the socket
 	exec.Command("pkill -9 -f firecracker" + vmIP)
 
-	socket := "/tmp/firecracker" + strings.Replace(vmIP, ".", "-", -1) + ".socket"
+	socket := "/tmp/firecracker" + vmIP + ".socket"
 	os.Remove(socket)
 
 	// Remove IP
-	hostDevName := strings.Replace(vmIP, ":", "", -1)
-	exec.Command("ip addr del " + vmIP + "/32 dev " + hostDevName)
-	exec.Command("ip link set " + hostDevName + " down")
+	exec.Command("ip addr del " + vmIP)
+
+	fmt.Println("Removed VM with IP " + vmIP)
 }
 
 func checkAPIReachability(apiURL string, resultChan chan<- bool) {
@@ -61,10 +69,5 @@ func checkAPIReachability(apiURL string, resultChan chan<- bool) {
 	}
 	defer resp.Body.Close()
 
-	// Check the response status code
-	if resp.StatusCode == http.StatusOK {
-		resultChan <- true // API is reachable
-	} else {
-		resultChan <- false // API is not reachable
-	}
+	resultChan <- true // API is reachable
 }

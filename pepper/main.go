@@ -8,6 +8,10 @@ import (
 
 func main() {
 	//Connect("127.0.0.1", "")
+
+	// Tick
+	go tick()
+
 	fmt.Println("Pepper initialized, type 'help' for a list of commands.")
 	var cmd string
 	for {

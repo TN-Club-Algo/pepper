@@ -227,8 +227,12 @@ func createDisk(name string, folder string) error {
 
 func StartTest(vmID string) {
 	_, ok := vmAddresses[vmID]
+	fmt.Println("Starting test for VM", vmID, "at", vmAddresses[vmID])
 	if ok {
-		var request, _ = http.NewRequest("POST", vmAddresses[vmID]+":"+strconv.FormatInt(common.RestPort, 10)+common.InitEndPoint, nil)
+		var request, err = http.NewRequest("POST", vmAddresses[vmID]+":"+strconv.FormatInt(common.RestPort, 10)+common.InitEndPoint, nil)
+		if err != nil {
+			panic(err)
+		}
 
 		request.Header.Set("Content-Type", "application/json; charset=UTF-8")
 		client := &http.Client{}

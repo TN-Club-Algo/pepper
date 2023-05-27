@@ -160,49 +160,22 @@ func StartVM(folder string) {
 
 	session, _ := conn.NewSession()
 
-	// mount the needed files (user program and pepper)
-	err = session.Run("mkdir -p /mnt")
-	if err != nil {
-		fmt.Println("Error creating /mnt:", err)
-		return
+	// mount the needed files (user program and pepper) then run pepper-vm
+	// Create a single command that is semicolon seperated
+	commands := []string{
+		"mkdir -p /mnt",
+		"mount /dev/vdb /mnt",
+		"mv /mnt/* /root/",
+		"mv /root/program /home/container/program",
+		"chown -R container /home/container",
+		"chgrp -R container /home/container",
+		"chmod -R 500 /home/container",
+		"/root/pepper-vm",
 	}
-	err = session.Run("mount /dev/vdb /mnt")
-	if err != nil {
-		fmt.Println("Error mounting /mnt:", err)
-		return
-	}
-	err = session.Run("mv /mnt/* /root/")
-	if err != nil {
-		fmt.Println("Error moving files from /mnt to /root:", err)
-		return
-	}
+	command := strings.Join(commands, "; ")
 
-	err = session.Run("mv /root/program /home/container/program")
-	if err != nil {
-		fmt.Println("Error moving program to container:", err)
-		return
-	}
-	err = session.Run("chown -R container /home/container")
-	if err != nil {
-		fmt.Println("Error changing ownership of /home/container:", err)
-		return
-	}
-	err = session.Run("chgrp -R container /home/container")
-	if err != nil {
-		fmt.Println("Error changing group of /home/container:", err)
-		return
-	}
-	err = session.Run("chmod -R 500 /home/container") // execute and read
-	if err != nil {
-		fmt.Println("Error changing permissions of /home/container:", err)
-		return
-	}
-
-	// Start pepper-vm
-	err = session.Run("/root/pepper-vm")
-	if err != nil {
-		fmt.Println("Error starting pepper-vm:", err)
-		return
+	if err := session.Run(command); err != nil {
+		panic("Failed to run command: " + command + "\nBecause: " + err.Error())
 	}
 
 	session.Close()

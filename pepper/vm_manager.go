@@ -32,7 +32,7 @@ func StartVM(folder string) {
 	// Find an available IP
 	address := GetAvailableIP(baseIp, usedIps)
 
-	fmt.Println("Found address: ", address)
+	fmt.Println("Found address:", address)
 
 	// Edit config
 	b, err := os.ReadFile("/root/vm_config.json")
@@ -42,7 +42,7 @@ func StartVM(folder string) {
 
 	hostDevName := strings.Replace(address, ".", "", -1)
 
-	fmt.Println("Determined hostname: ", hostDevName)
+	fmt.Println("Determined hostname:", hostDevName)
 
 	config := string(b)
 	// new mac address is the ip address in hex and 00 00 at the end
@@ -82,7 +82,8 @@ func StartVM(folder string) {
 		fmt.Println("Error removing socket: ", err)
 		return
 	}
-	err = exec.Command("screen", "-dmS", hostDevName, "/root/firecracker-bin --api-sock "+socket+" --config-file "+configFile).Run()
+	err = exec.Command("/root/firecracker-bin", "--api-sock", socket, "--config-file", configFile).Run()
+	//err = exec.Command("screen", "-dmS", hostDevName, "/root/firecracker-bin --api-sock "+socket+" --config-file "+configFile).Run()
 	if err != nil {
 		fmt.Println("Error starting firecracker VM: ", err)
 		return

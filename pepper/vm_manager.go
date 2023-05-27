@@ -75,25 +75,33 @@ func StartVM(folder string) {
 	fmt.Println("Starting Firecracker VM...")
 
 	// Start firecracker VM
-	socket := "/tmp/firecracker" + strings.Replace(address, ".", "-", -1) + ".socket"
+	socket := "/tmp/firecracker" + hostDevName + ".socket"
 	// Remove socket if it exists
 	err = exec.Command("rm", "-f", socket).Run()
 	if err != nil {
-		fmt.Println("Error removing socket: ", err)
+		fmt.Println("Error removing socket:", err)
 		return
 	}
 	err = exec.Command("/root/firecracker-bin", "--api-sock", socket, "--config-file", configFile).Run()
 	//err = exec.Command("screen", "-dmS", hostDevName, "/root/firecracker-bin --api-sock "+socket+" --config-file "+configFile).Run()
 	if err != nil {
-		fmt.Println("Error starting firecracker VM: ", err)
+		fmt.Println("Error starting firecracker VM:", err)
 		return
 	}
 
 	fmt.Println("Firecracker VM started!")
 
 	// Set host network
-	exec.Command("ip", "addr", "add", address+"/32", "dev", hostDevName).Run()
-	exec.Command("ip", "link", "set", hostDevName, "up").Run()
+	err = exec.Command("ip", "addr", "add", address+"/32", "dev", hostDevName).Run()
+	if err != nil {
+		fmt.Println("Error setting host network:", err)
+		return
+	}
+	err = exec.Command("ip", "link", "set", hostDevName, "up").Run()
+	if err != nil {
+		fmt.Println("Error setting host network:", err)
+		return
+	}
 
 	// Move user's program to container user and change permissions
 	key, _ := os.ReadFile("/root/.ssh/id_rsa")

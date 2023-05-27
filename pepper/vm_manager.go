@@ -94,7 +94,9 @@ func StartVM(folder string) {
 	}
 
 	// Set host network
-	err = exec.Command("ip", "link", "del", hostDevName, "2>", "/dev/null", "||", "true").Run()
+	cmd := exec.Command("ip", "link", "del", hostDevName)
+	cmd.Stderr = nil
+	err = cmd.Run()
 	if err != nil {
 		fmt.Println("Error removing host network:", err)
 		return
@@ -104,12 +106,16 @@ func StartVM(folder string) {
 		fmt.Println("Error creating host network:", err)
 		return
 	}
-	err = exec.Command("sysctl", "-w", "net.ipv4.conf."+hostDevName+".proxy_arp=1", ">", "/dev/null").Run()
+	cmd = exec.Command("sysctl", "-w", "net.ipv4.conf."+hostDevName+".proxy_arp=1")
+	cmd.Stderr = nil
+	err = cmd.Run()
 	if err != nil {
 		fmt.Println("Error enabling proxy arp:", err)
 		return
 	}
-	err = exec.Command("sysctl", "-w", "net.ipv6.conf."+hostDevName+".disable_ipv6=1", ">", "/dev/null").Run()
+	cmd = exec.Command("sysctl", "-w", "net.ipv6.conf."+hostDevName+".disable_ipv6=1")
+	cmd.Stderr = nil
+	err = cmd.Run()
 	if err != nil {
 		fmt.Println("Error disabling ipv6:", err)
 		return

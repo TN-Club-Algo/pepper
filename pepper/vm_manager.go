@@ -30,9 +30,15 @@ func init() {
 
 func StartVM(folder string) {
 	// Find an available IP
-	address := GetAvailableIP(baseIp, usedIps)
+	maskLong := "255.255.255.252"
+	maskShort := "/30"
 
-	fmt.Println("Found address:", address)
+	fcAddress := GetAvailableIP(baseIp, usedIps)
+	usedIps = append(usedIps, fcAddress)
+	tapAddress := GetAvailableIP(baseIp, usedIps)
+	usedIps = append(usedIps, tapAddress)
+
+	fmt.Println("Found fcAddress:", fcAddress)
 
 	// Edit config
 	b, err := os.ReadFile("/root/vm_config.json")
@@ -40,13 +46,17 @@ func StartVM(folder string) {
 		return
 	}
 
-	hostDevName := strings.Replace(address, ".", "", -1)
+	hostDevName := strings.Replace(fcAddress, ".", "", -1)
 
 	fmt.Println("Determined hostname:", hostDevName)
 
+	kernelBootArgs := "ro console=ttyS0 reboot=k panic=1 pci=off"
+	kernelBootArgs += " ip=" + fcAddress + "::" + tapAddress + ":" + maskLong + "::eth0:off"
+
 	config := string(b)
-	// new mac address is the ip address in hex and 00 00 at the end
-	config = strings.Replace(config, "AA:BB:CC:DD:EE:FF", ipv4ToHex(address)+":00:00", 1)    // mac address
+	// new mac fcAddress is the ip fcAddress in hex and 00 00 at the end
+	config = strings.Replace(config, "kernelBootArgs", kernelBootArgs, 1)                    // kernel boot args
+	config = strings.Replace(config, "AA:BB:CC:DD:EE:FF", ipv4ToHex(fcAddress)+":00:00", 1)  // mac fcAddress
 	config = strings.Replace(config, "2048", "2048", 1)                                      // ram
 	config = strings.Replace(config, "fc0", hostDevName, 1)                                  // host network name
 	config = strings.Replace(config, "/root/fc1-disk.ext4", "/root/"+hostDevName+".ext4", 1) // initrd location
@@ -82,6 +92,39 @@ func StartVM(folder string) {
 		fmt.Println("Error removing socket:", err)
 		return
 	}
+
+	// Set host network
+	err = exec.Command("ip", "link", "del", hostDevName, "2>", "/dev/null", "||", "true").Run()
+	if err != nil {
+		fmt.Println("Error removing host network:", err)
+		return
+	}
+	err = exec.Command("ip", "tuntap", "add", "dev", hostDevName, "mode", "tap").Run()
+	if err != nil {
+		fmt.Println("Error creating host network:", err)
+		return
+	}
+	err = exec.Command("sysctl", "-w", "net.ipv4.conf."+hostDevName+".proxy_arp=1", ">", "/dev/null").Run()
+	if err != nil {
+		fmt.Println("Error enabling proxy arp:", err)
+		return
+	}
+	err = exec.Command("sysctl", "-w", "net.ipv6.conf."+hostDevName+".disable_ipv6=1", ">", "/dev/null").Run()
+	if err != nil {
+		fmt.Println("Error disabling ipv6:", err)
+		return
+	}
+	err = exec.Command("ip", "addr", "add", tapAddress+maskShort, "dev", hostDevName).Run()
+	if err != nil {
+		fmt.Println("Error adding ip address:", err)
+		return
+	}
+	err = exec.Command("ip", "link", "set", "dev", hostDevName, "up").Run()
+	if err != nil {
+		fmt.Println("Error setting host network up:", err)
+		return
+	}
+
 	err = exec.Command("/root/firecracker-bin", "--api-sock", socket, "--config-file", configFile).Start()
 	//err = exec.Command("screen", "-dmS", hostDevName, "/root/firecracker-bin --api-sock "+socket+" --config-file "+configFile).Run()
 	if err != nil {
@@ -91,28 +134,17 @@ func StartVM(folder string) {
 
 	fmt.Println("Firecracker VM started!")
 
-	// Set host network
-	err = exec.Command("ip", "addr", "add", address+"/32", "dev", hostDevName).Run()
-	if err != nil {
-		fmt.Println("Error setting host network:", err)
-		return
-	}
-	err = exec.Command("ip", "link", "set", hostDevName, "up").Run()
-	if err != nil {
-		fmt.Println("Error setting host network:", err)
-		return
-	}
-
 	// Move user's program to container user and change permissions
 	key, _ := os.ReadFile("/root/.ssh/id_rsa")
 	signer, err := ssh.ParsePrivateKey(key)
-	conn, err := ssh.Dial("tcp", address+":22", &ssh.ClientConfig{
+	conn, err := ssh.Dial("tcp", fcAddress+":22", &ssh.ClientConfig{
 		User: "root",
 		Auth: []ssh.AuthMethod{
 			ssh.PublicKeys(signer),
 		},
 	})
 
+	// we'll need to wait for the VM to be ready
 	session, _ := conn.NewSession()
 	session.Run("mv /root/program /home/container/program")
 	session.Run("chown -R container /home/container")
@@ -130,7 +162,7 @@ func StartVM(folder string) {
 	conn.Close()
 
 	fmt.Println("Firecracker VM ready!")
-	vmAddresses[hostDevName] = address
+	vmAddresses[hostDevName] = fcAddress
 
 	// We are ready for tests, listen to the results
 	StartTest(hostDevName)

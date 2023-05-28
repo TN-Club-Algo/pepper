@@ -90,13 +90,39 @@ func startTests(vmInit common.VmInit) {
 				cmd := exec.Command("python", vmInit.UserProgram) // let's assume it isn't a folder for now
 				cmd.Dir = "/home/container/program"
 				inputData := <-inputDataChan
-				stdin, _ := cmd.StdinPipe()
-				_ = cmd.Start()
-				_, _ = stdin.Write(inputData)
-				stdin.Close()
-				pipe, _ := cmd.StdoutPipe()
-				output, _ := io.ReadAll(pipe)
-				_ = cmd.Wait()
+
+				fmt.Println("Input data is", string(inputData))
+
+				stdin, err := cmd.StdinPipe()
+				if err != nil {
+					fmt.Println(err)
+				}
+				err = cmd.Start()
+				if err != nil {
+					fmt.Println(err)
+				}
+				_, err = stdin.Write(inputData)
+				if err != nil {
+					fmt.Println(err)
+				}
+				err = stdin.Close()
+				if err != nil {
+					fmt.Println(err)
+				}
+				pipe, err := cmd.StdoutPipe()
+				if err != nil {
+					fmt.Println(err)
+				}
+				output, err := io.ReadAll(pipe)
+				if err != nil {
+					fmt.Println(err)
+				}
+				err = cmd.Wait()
+				if err != nil {
+					fmt.Println(err)
+				}
+
+				fmt.Println("Output is", string(output))
 
 				// write output to the channel which will send it to the client
 				outputChan <- output

@@ -61,7 +61,7 @@ func StartWebSocketServer() {
 
 	svr := nbhttp.NewServer(nbhttp.Config{
 		Network: "tcp",
-		Addrs:   []string{"localhost:8888"},
+		Addrs:   []string{"0.0.0.0:8888"},
 		Handler: mux,
 	})
 

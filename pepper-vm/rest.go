@@ -33,7 +33,7 @@ func receiveInput(c *gin.Context) {
 
 	inputDataChan <- []byte(input.Input)
 
-	c.IndentedJSON(http.StatusOK, nil)
+	c.Status(http.StatusOK)
 }
 
 func initTests(c *gin.Context) {
@@ -49,7 +49,7 @@ func initTests(c *gin.Context) {
 	// Compile program
 	go compileAndContinue(vmInit)
 
-	c.IndentedJSON(http.StatusOK, nil)
+	c.Status(http.StatusOK)
 }
 
 func compileAndContinue(vmInit common.VmInit) {

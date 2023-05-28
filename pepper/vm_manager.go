@@ -335,7 +335,7 @@ func SendInput(vmID string, input string, expectedOutput string) {
 	fmt.Println("Waiting for result from VM", vmID, "at", vmAddresses[vmID])
 
 	// Wait for the result on the websocket
-	u := url.URL{Scheme: "ws", Host: "localhost:8888", Path: "/ws"}
+	u := url.URL{Scheme: "ws", Host: vmAddresses[vmID] + ":8888", Path: "/ws"}
 	c, res, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
 		bReason, _ := io.ReadAll(res.Body)

@@ -11,14 +11,22 @@ const (
 	TestTypeInputOutput string = "input/output"
 )
 
-type Test struct {
-	ID          string `json:"id"`          // test id
-	UserProgram string `json:"userProgram"` // user program location
-}
-
 type VmInput struct {
 	ID    string `json:"id"`
 	Input string `json:"input"`
+}
+
+type TestRequest struct {
+	ID          string `json:"id"`          // test id
+	UserProgram string `json:"userProgram"` // user program location
+	TestType    string `json:"testType"`
+	TestCount   int    `json:"testCount"`
+	Tests       string `json:"tests"`
+}
+
+type InnerInputOutputTest struct {
+	Inputs  []string `json:"inputs"`
+	Outputs []string `json:"outputs"`
 }
 
 type VmInit struct {

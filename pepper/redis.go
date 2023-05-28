@@ -4,6 +4,7 @@ import (
 	"AlgoTN/common"
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -18,6 +19,7 @@ func Connect(address string, password string) {
 		Password: password,
 		DB:       0,
 	})
+	listen()
 }
 func listen() {
 	pubsub := rdb.Subscribe(ctx, "pepper-tests")
@@ -29,10 +31,19 @@ func listen() {
 			panic(err)
 		}
 
-		test := common.Test{}
+		test := common.TestRequest{}
 		err = json.Unmarshal([]byte(msg.Payload), &test)
 		if err != nil {
 			panic(err)
+		}
+
+		if test.TestType == common.TestTypeInputOutput {
+			innerInputOutputTest := common.InnerInputOutputTest{}
+			err = json.Unmarshal([]byte(test.Tests), &innerInputOutputTest)
+			if err != nil {
+				panic(err)
+			}
+			fmt.Println(innerInputOutputTest)
 		}
 
 		// Create VM

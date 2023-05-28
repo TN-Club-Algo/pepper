@@ -189,20 +189,20 @@ func StartVM(folder string) {
 		"chgrp -R container /home/container 2>/dev/null",
 		"chmod -R 500 /home/container 2>/dev/null",
 		"mkdir /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2", // fix for pepper-vm binary execution
-		"nohup /root/pepper-vm &",
+		"nohup /root/pepper-vm  >/dev/null &",
 	}
 	command := strings.Join(commands, "; ")
 
 	fmt.Println("Running commands...")
 
-	if err := session.Start(command); err != nil {
+	if err := session.Run(command); err != nil {
 		panic("Failed to run command: " + command + "\nBecause: " + err.Error())
 	}
 
 	session.Close()
 	conn.Close()
 
-	time.Sleep(500 * time.Millisecond)
+	//time.Sleep(500 * time.Millisecond)
 
 	fmt.Println("Firecracker VM ready!")
 	vmAddresses[hostDevName] = fcAddress

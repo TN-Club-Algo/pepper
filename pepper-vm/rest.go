@@ -2,6 +2,7 @@ package main
 
 import (
 	"AlgoTN/common"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
@@ -31,6 +32,8 @@ func receiveInput(c *gin.Context) {
 		return
 	}
 
+	fmt.Println("Received input request with data", input)
+
 	inputDataChan <- []byte(input.Input)
 
 	c.Status(http.StatusOK)
@@ -45,6 +48,8 @@ func initTests(c *gin.Context) {
 		TestType:    c.Request.URL.Query().Get("testType"),
 		TestCount:   testCount,
 	}
+
+	fmt.Println("Received init request with data", vmInit)
 
 	// Compile program
 	compileAndContinue(vmInit)
@@ -77,6 +82,8 @@ func startTests(vmInit common.VmInit) {
 		case common.PYTHON:
 			// python
 			if vmInit.TestType == common.TestTypeInputOutput {
+				fmt.Println("Test type is input/output for Python")
+
 				cmd := exec.Command("python", vmInit.UserProgram) // let's assume it isn't a folder for now
 				cmd.Dir = "/home/container/program"
 				inputData := <-inputDataChan

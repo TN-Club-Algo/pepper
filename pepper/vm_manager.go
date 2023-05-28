@@ -288,6 +288,8 @@ func SendInput(vmID string, input string) {
 			return
 		}
 	}(response.Body)
+
+	// Wait for the result on the websocket
 }
 
 func EndVM() {

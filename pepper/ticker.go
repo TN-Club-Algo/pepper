@@ -27,6 +27,18 @@ func tick() {
 				vmIp, _ := strings.CutPrefix(file.Name(), "firecracker")
 				vmIp, _ = strings.CutSuffix(vmIp, ".socket")
 
+				// if it is inside justStartedVMs, skip
+				justStarted := false
+				for _, vm := range justStartedVMs {
+					if vm == vmIp {
+						justStarted = true
+						break
+					}
+				}
+				if justStarted {
+					continue
+				}
+
 				// Check if the VM is reachable
 				resultChan := make(chan bool)
 				go checkAPIReachability("http://"+vmIp+":8080", resultChan)

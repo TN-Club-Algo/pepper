@@ -23,8 +23,9 @@ const (
 )
 
 var (
-	vmAddresses map[string]string
-	usedIps     []string
+	vmAddresses    map[string]string
+	usedIps        []string
+	justStartedVMs []string
 )
 
 func init() {
@@ -116,6 +117,18 @@ func StartVM(folder string) {
 		fmt.Println("Error setting host network up:", err)
 		return
 	}
+
+	justStartedVMs = append(justStartedVMs, hostDevName)
+	// remove after 5s
+	go func() {
+		time.Sleep(5 * time.Second)
+		for i := range justStartedVMs {
+			if justStartedVMs[i] == hostDevName {
+				justStartedVMs = append(justStartedVMs[:i], justStartedVMs[i+1:]...)
+				break
+			}
+		}
+	}()
 
 	err = exec.Command("/root/firecracker-bin", "--api-sock", socket, "--config-file", configFile).Start()
 	if err != nil {

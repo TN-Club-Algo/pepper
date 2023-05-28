@@ -68,11 +68,6 @@ func compileAndContinue(vmInit common.VmInit) {
 }
 
 func startTests(vmInit common.VmInit) {
-	switch vmInit.TestType {
-	case common.TestTypeInputOutput:
-
-	}
-
 	for i := 0; i < vmInit.TestCount; i++ {
 		// Run test
 		switch vmInit.ProgramType {

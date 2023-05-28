@@ -41,7 +41,7 @@ func tick() {
 
 				// Check if the VM is reachable
 				resultChan := make(chan bool)
-				go checkAPIReachability("http://"+vmIp+":8080", resultChan)
+				go checkAPIReachability("http://"+vmIp+":8080/ping", resultChan)
 
 				select {
 				case result := <-resultChan:

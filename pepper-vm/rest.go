@@ -17,6 +17,7 @@ func StartREST() {
 
 	router.PUT(common.InputEndpoint, receiveInput)
 	router.PUT(common.InitEndPoint, initTests)
+	router.GET(common.PingEndPoint, ping)
 
 	err := router.Run(":" + strconv.FormatInt(common.RestPort, 10))
 	if err != nil {
@@ -39,14 +40,16 @@ func receiveInput(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
+func ping(c *gin.Context) {
+	c.Status(http.StatusOK)
+}
+
 func initTests(c *gin.Context) {
-	testCount, _ := strconv.Atoi(c.Request.URL.Query().Get("testCount"))
-	vmInit := common.VmInit{
-		ProgramType: c.Request.URL.Query().Get("programType"),
-		UserProgram: c.Request.URL.Query().Get("userProgram"),
-		IsDirectory: c.Request.URL.Query().Get("isDirectory") == "true",
-		TestType:    c.Request.URL.Query().Get("testType"),
-		TestCount:   testCount,
+	var vmInit common.VmInit
+	err := c.BindJSON(&vmInit)
+
+	if err != nil {
+		return
 	}
 
 	fmt.Println("Received init request with data", vmInit)

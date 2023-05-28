@@ -359,8 +359,12 @@ func SendInput(vmID string, input string, expectedOutput string) {
 		return
 	}
 
-	log.Println("Received output:", string(rsp), "expected:", expectedOutput)
-	if string(rsp) == expectedOutput {
+	// remove the last \n and unuseful spaces
+	rspStr := strings.Trim(string(rsp), "\n")
+	rspStr = strings.Trim(rspStr, " ")
+
+	log.Println("Received output:", rspStr, "expected:", expectedOutput)
+	if rspStr == expectedOutput {
 		fmt.Println("Test passed!")
 	} else {
 		fmt.Println("Test failed!")

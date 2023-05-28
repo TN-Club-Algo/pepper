@@ -1,6 +1,6 @@
 package main
 
 func main() {
-	StartREST()
-	StartWebSocketServer()
+	go StartREST()
+	go StartWebSocketServer()
 }

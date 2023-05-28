@@ -97,6 +97,10 @@ func startTests(vmInit common.VmInit) {
 				if err != nil {
 					fmt.Println(err)
 				}
+				pipe, err := cmd.StdoutPipe()
+				if err != nil {
+					fmt.Println(err)
+				}
 				err = cmd.Start()
 				if err != nil {
 					fmt.Println(err)
@@ -106,10 +110,6 @@ func startTests(vmInit common.VmInit) {
 					fmt.Println(err)
 				}
 				err = stdin.Close()
-				if err != nil {
-					fmt.Println(err)
-				}
-				pipe, err := cmd.StdoutPipe()
 				if err != nil {
 					fmt.Println(err)
 				}

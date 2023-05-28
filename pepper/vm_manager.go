@@ -283,6 +283,8 @@ func StartTest(vmID string) {
 		}
 		b, _ := json.Marshal(data)
 
+		fmt.Println("Sending init request to VM", vmID, "at", vmAddresses[vmID], "with data", string(b))
+
 		var request, err = http.NewRequest("PUT", "http://"+vmAddresses[vmID]+":"+strconv.FormatInt(common.RestPort, 10)+common.InitEndPoint, strings.NewReader(string(b)))
 		if err != nil {
 			panic(err)
@@ -300,11 +302,15 @@ func StartTest(vmID string) {
 				return
 			}
 		}(response.Body)
+
+		fmt.Println("Init request sent to VM", vmID, "at", vmAddresses[vmID])
 	}
 }
 
 func SendInput(vmID string, input string, expectedOutput string) {
 	var structInput = common.VmInput{ID: vmID, Input: input}
+
+	fmt.Println("Sending input to VM", vmID, "at", vmAddresses[vmID], "with data", structInput)
 
 	var result, _ = json.Marshal(structInput)
 	var request, _ = http.NewRequest("PUT", "http://"+vmAddresses[vmID]+":"+strconv.FormatInt(common.RestPort, 10)+common.InputEndpoint, bytes.NewBuffer(result))
@@ -321,6 +327,9 @@ func SendInput(vmID string, input string, expectedOutput string) {
 			return
 		}
 	}(response.Body)
+
+	fmt.Println("Input sent to VM", vmID, "at", vmAddresses[vmID])
+	fmt.Println("Waiting for result from VM", vmID, "at", vmAddresses[vmID])
 
 	// Wait for the result on the websocket
 	u := url.URL{Scheme: "ws", Host: "localhost:8888", Path: "/ws"}

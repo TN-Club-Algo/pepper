@@ -174,6 +174,8 @@ func StartVM(folder string) {
 		return
 	}
 
+	fmt.Println("SSH connection successful!")
+
 	session, _ := conn.NewSession()
 
 	// mount the needed files (user program and pepper) then run pepper-vm
@@ -191,12 +193,16 @@ func StartVM(folder string) {
 	}
 	command := strings.Join(commands, "; ")
 
-	if err := session.Run(command); err != nil {
+	fmt.Println("Running commands...")
+
+	if err := session.Start(command); err != nil {
 		panic("Failed to run command: " + command + "\nBecause: " + err.Error())
 	}
 
 	session.Close()
 	conn.Close()
+
+	time.Sleep(500 * time.Millisecond)
 
 	fmt.Println("Firecracker VM ready!")
 	vmAddresses[hostDevName] = fcAddress

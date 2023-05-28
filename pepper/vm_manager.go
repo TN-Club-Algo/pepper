@@ -119,9 +119,9 @@ func StartVM(folder string) {
 	}
 
 	justStartedVMs = append(justStartedVMs, hostDevName)
-	// remove after 5s
+	// remove after 7s
 	go func() {
-		time.Sleep(5 * time.Second)
+		time.Sleep(7 * time.Second)
 		for i := range justStartedVMs {
 			if justStartedVMs[i] == hostDevName {
 				justStartedVMs = append(justStartedVMs[:i], justStartedVMs[i+1:]...)
@@ -195,14 +195,14 @@ func StartVM(folder string) {
 
 	fmt.Println("Running commands...")
 
-	if err := session.Run(command); err != nil {
+	if err := session.Start(command); err != nil {
 		panic("Failed to run command: " + command + "\nBecause: " + err.Error())
 	}
 
 	session.Close()
 	conn.Close()
 
-	//time.Sleep(500 * time.Millisecond)
+	time.Sleep(500 * time.Millisecond)
 
 	fmt.Println("Firecracker VM ready!")
 	vmAddresses[hostDevName] = fcAddress

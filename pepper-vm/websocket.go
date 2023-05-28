@@ -21,6 +21,7 @@ var (
 func newUpgrader() *websocket.Upgrader {
 	u := websocket.NewUpgrader()
 	u.OnMessage(func(c *websocket.Conn, messageType websocket.MessageType, data []byte) {
+		fmt.Println("OnMessage:", c.RemoteAddr().String(), string(data))
 		if string(data) == "output" {
 			// wait for the channel containing the output
 			output := <-outputChan

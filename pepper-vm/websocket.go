@@ -14,23 +14,19 @@ import (
 )
 
 var (
-	onDataFrame      = flag.Bool("UseOnDataFrame", false, "Server will use OnDataFrame api instead of OnMessage")
 	errBeforeUpgrade = flag.Bool("error-before-upgrade", false, "return an error on upgrade with body")
+	outputChan       = make(chan []byte)
 )
 
 func newUpgrader() *websocket.Upgrader {
 	u := websocket.NewUpgrader()
-	if *onDataFrame {
-		u.OnDataFrame(func(c *websocket.Conn, messageType websocket.MessageType, fin bool, data []byte) {
-			// echo
-			c.WriteFrame(messageType, true, fin, data)
-		})
-	} else {
-		u.OnMessage(func(c *websocket.Conn, messageType websocket.MessageType, data []byte) {
-			// echo
-			c.WriteMessage(messageType, data)
-		})
-	}
+	u.OnMessage(func(c *websocket.Conn, messageType websocket.MessageType, data []byte) {
+		if string(data) == "output" {
+			// wait for the channel containing the output
+			output := <-outputChan
+			c.WriteMessage(messageType, output)
+		}
+	})
 
 	u.OnClose(func(c *websocket.Conn, err error) {
 		fmt.Println("OnClose:", c.RemoteAddr().String(), err)

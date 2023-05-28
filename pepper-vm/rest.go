@@ -83,6 +83,7 @@ func startTests(vmInit common.VmInit) {
 			// python
 			if vmInit.TestType == common.TestTypeInputOutput {
 				cmd := exec.Command("python", vmInit.UserProgram) // let's assume it isn't a folder for now
+				cmd.Dir = "/home/container/program"
 				inputData := <-inputDataChan
 				stdin, _ := cmd.StdinPipe()
 				_ = cmd.Start()
@@ -92,9 +93,10 @@ func startTests(vmInit common.VmInit) {
 				output, _ := io.ReadAll(pipe)
 				_ = cmd.Wait()
 
-				// write output to file
-				exec.Command("touch", "/home/container/output.txt").Run()
-				exec.Command("echo", string(output), ">>", "/home/container/output.txt").Run()
+				// write output to the channel which will send it to the client
+				outputChan <- output
+				//exec.Command("touch", "/home/container/output.txt").Run()
+				//exec.Command("echo", string(output), ">>", "/home/container/output.txt").Run()
 			}
 		case common.C:
 		}

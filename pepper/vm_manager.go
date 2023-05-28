@@ -5,9 +5,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/gorilla/websocket"
 	"golang.org/x/crypto/ssh"
 	"io"
+	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"strconv"
@@ -187,6 +190,7 @@ func StartVM(folder string) {
 
 	// We are ready for tests, listen to the results
 	StartTest(hostDevName)
+	SendInput(hostDevName, "abc", "abc")
 }
 
 func createDisk(name string, folder string) error {
@@ -250,7 +254,17 @@ func StartTest(vmID string) {
 	_, ok := vmAddresses[vmID]
 	fmt.Println("Starting test for VM", vmID, "at", vmAddresses[vmID])
 	if ok {
-		var request, err = http.NewRequest("POST", "http://"+vmAddresses[vmID]+":"+strconv.FormatInt(common.RestPort, 10)+common.InitEndPoint, nil)
+		// test purpose
+		data := common.VmInit{
+			ProgramType: common.PYTHON,
+			UserProgram: "program.py",
+			IsDirectory: false,
+			TestType:    common.TestTypeInputOutput,
+			TestCount:   1,
+		}
+		b, _ := json.Marshal(data)
+
+		var request, err = http.NewRequest("POST", "http://"+vmAddresses[vmID]+":"+strconv.FormatInt(common.RestPort, 10)+common.InitEndPoint, strings.NewReader(string(b)))
 		if err != nil {
 			panic(err)
 		}
@@ -270,7 +284,7 @@ func StartTest(vmID string) {
 	}
 }
 
-func SendInput(vmID string, input string) {
+func SendInput(vmID string, input string, expectedOutput string) {
 	var structInput = common.VmInput{ID: vmID, Input: input}
 
 	var result, _ = json.Marshal(structInput)
@@ -290,6 +304,35 @@ func SendInput(vmID string, input string) {
 	}(response.Body)
 
 	// Wait for the result on the websocket
+	u := url.URL{Scheme: "ws", Host: "localhost:8888", Path: "/ws"}
+	c, res, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	if err != nil {
+		bReason, _ := io.ReadAll(res.Body)
+		log.Fatalf("dial: %v, reason: %v\n", err, string(bReason))
+	}
+	defer c.Close()
+	err = c.WriteMessage(websocket.TextMessage, []byte("output"))
+	if err != nil {
+		log.Fatalf("write: %v", err)
+		return
+	}
+
+	receiveType, rsp, err := c.ReadMessage()
+	if err != nil {
+		log.Println("ReadMessage failed:", err)
+		return
+	}
+	if receiveType != websocket.TextMessage {
+		log.Printf("received type(%d) != websocket.TextMessage(%d)\n", receiveType, websocket.TextMessage)
+		return
+	}
+
+	log.Println("Received output:", string(rsp), "expected:", expectedOutput)
+	if string(rsp) == expectedOutput {
+		fmt.Println("Test passed!")
+	} else {
+		fmt.Println("Test failed!")
+	}
 }
 
 func EndVM() {

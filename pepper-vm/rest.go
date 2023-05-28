@@ -47,7 +47,7 @@ func initTests(c *gin.Context) {
 	}
 
 	// Compile program
-	go compileAndContinue(vmInit)
+	compileAndContinue(vmInit)
 
 	c.Status(http.StatusOK)
 }

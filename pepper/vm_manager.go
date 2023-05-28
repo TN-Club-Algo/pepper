@@ -206,9 +206,8 @@ func StartVM(folder string) {
 	fmt.Println("Firecracker VM ready!")
 	vmAddresses[hostDevName] = fcAddress
 
-	// We are ready for tests, listen to the results
+	// We are ready for tests
 	StartTest(hostDevName)
-	SendInput(hostDevName, "abc", "abc")
 }
 
 func createDisk(name string, folder string) error {
@@ -303,6 +302,8 @@ func StartTest(vmID string) {
 		}(response.Body)
 
 		fmt.Println("Init request sent to VM", vmID, "at", vmAddresses[vmID])
+
+		SendInput(vmID, "abc", "abc")
 	}
 }
 
@@ -312,7 +313,10 @@ func SendInput(vmID string, input string, expectedOutput string) {
 	var b, _ = json.Marshal(structInput)
 	fmt.Println("Sending input to VM", vmID, "at", vmAddresses[vmID], "with data", string(b))
 
-	var request, _ = http.NewRequest("PUT", "http://"+vmAddresses[vmID]+":"+strconv.FormatInt(common.RestPort, 10)+common.InputEndpoint, strings.NewReader(string(b)))
+	var request, err = http.NewRequest("PUT", "http://"+vmAddresses[vmID]+":"+strconv.FormatInt(common.RestPort, 10)+common.InputEndpoint, strings.NewReader(string(b)))
+	if err != nil {
+		panic(err)
+	}
 
 	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	client := &http.Client{}

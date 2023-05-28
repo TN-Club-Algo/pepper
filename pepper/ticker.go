@@ -1,6 +1,7 @@
 package main
 
 import (
+	"AlgoTN/common"
 	"fmt"
 	"net/http"
 	"os"
@@ -41,7 +42,7 @@ func tick() {
 
 				// Check if the VM is reachable
 				resultChan := make(chan bool)
-				go checkAPIReachability("http://"+vmIp+":8080/ping", resultChan)
+				go checkAPIReachability("http://"+vmAddresses[vmIp]+":8080"+common.PingEndPoint, resultChan)
 
 				select {
 				case result := <-resultChan:

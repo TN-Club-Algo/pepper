@@ -36,8 +36,6 @@ func tick() {
 					if !result {
 						removeVM(vmIp)
 					}
-					/*case <-time.After(5 * time.Second):
-					removeVM(vmIp)*/
 				}
 
 			}
@@ -62,7 +60,8 @@ func removeVM(vmIP string) {
 
 func checkAPIReachability(apiURL string, resultChan chan<- bool) {
 	// Send a GET request to the API URL
-	resp, err := http.Get(apiURL)
+	client := http.Client{Timeout: 5 * time.Second}
+	resp, err := client.Get(apiURL)
 	if err != nil {
 		resultChan <- false // API is not reachable
 		return

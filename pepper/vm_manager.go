@@ -283,7 +283,7 @@ func StartTest(vmID string) {
 		}
 		b, _ := json.Marshal(data)
 
-		var request, err = http.NewRequest("POST", "http://"+vmAddresses[vmID]+":"+strconv.FormatInt(common.RestPort, 10)+common.InitEndPoint, strings.NewReader(string(b)))
+		var request, err = http.NewRequest("PUT", "http://"+vmAddresses[vmID]+":"+strconv.FormatInt(common.RestPort, 10)+common.InitEndPoint, strings.NewReader(string(b)))
 		if err != nil {
 			panic(err)
 		}
@@ -307,7 +307,7 @@ func SendInput(vmID string, input string, expectedOutput string) {
 	var structInput = common.VmInput{ID: vmID, Input: input}
 
 	var result, _ = json.Marshal(structInput)
-	var request, _ = http.NewRequest("POST", vmAddresses[vmID]+":"+strconv.FormatInt(common.RestPort, 10)+common.InputEndpoint, bytes.NewBuffer(result))
+	var request, _ = http.NewRequest("PUT", "http://"+vmAddresses[vmID]+":"+strconv.FormatInt(common.RestPort, 10)+common.InputEndpoint, bytes.NewBuffer(result))
 
 	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	client := &http.Client{}

@@ -2,7 +2,6 @@ package main
 
 import (
 	"AlgoTN/common"
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
@@ -310,10 +309,10 @@ func StartTest(vmID string) {
 func SendInput(vmID string, input string, expectedOutput string) {
 	var structInput = common.VmInput{ID: vmID, Input: input}
 
-	fmt.Println("Sending input to VM", vmID, "at", vmAddresses[vmID], "with data", structInput)
+	var b, _ = json.Marshal(structInput)
+	fmt.Println("Sending input to VM", vmID, "at", vmAddresses[vmID], "with data", string(b))
 
-	var result, _ = json.Marshal(structInput)
-	var request, _ = http.NewRequest("PUT", "http://"+vmAddresses[vmID]+":"+strconv.FormatInt(common.RestPort, 10)+common.InputEndpoint, bytes.NewBuffer(result))
+	var request, _ = http.NewRequest("PUT", "http://"+vmAddresses[vmID]+":"+strconv.FormatInt(common.RestPort, 10)+common.InputEndpoint, strings.NewReader(string(b)))
 
 	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	client := &http.Client{}

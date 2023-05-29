@@ -21,6 +21,7 @@ func Connect(address string, password string) {
 	})
 	listen()
 }
+
 func listen() {
 	pubsub := rdb.Subscribe(ctx, "pepper-tests")
 	defer pubsub.Close()
@@ -47,6 +48,41 @@ func listen() {
 		}
 
 		// Create VM
-		StartVM(test.UserProgram)
+		StartVM(test.UserProgram, test)
+	}
+}
+
+func sendInnerTestResult(testId string, testIndex int, result bool) {
+	innerTestOutput := common.InnerTestResult{
+		ID:    testId,
+		Index: testIndex,
+		Ok:    result,
+	}
+
+	bytes, err := json.Marshal(innerTestOutput)
+	if err != nil {
+		panic(err)
+	}
+
+	err = rdb.Publish(ctx, "pepper-inner-test-results", bytes).Err()
+	if err != nil {
+		panic(err)
+	}
+}
+
+func sendTestResult(testId string, allPassed bool) {
+	testResult := common.TestResult{
+		ID: testId,
+		Ok: allPassed,
+	}
+
+	bytes, err := json.Marshal(testResult)
+	if err != nil {
+		panic(err)
+	}
+
+	err = rdb.Publish(ctx, "pepper-test-results", bytes).Err()
+	if err != nil {
+		panic(err)
 	}
 }

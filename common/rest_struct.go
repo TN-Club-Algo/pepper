@@ -16,6 +16,17 @@ type VmInput struct {
 	Input string `json:"input"`
 }
 
+type InnerTestResult struct {
+	ID    string `json:"id"`
+	Index int    `json:"index"`
+	Ok    bool   `json:"ok"`
+}
+
+type TestResult struct {
+	ID string `json:"id"`
+	Ok bool   `json:"ok"`
+}
+
 type TestRequest struct {
 	ID          string `json:"id"`          // test id
 	UserProgram string `json:"userProgram"` // user program location

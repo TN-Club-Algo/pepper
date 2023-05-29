@@ -32,7 +32,7 @@ func init() {
 	usedIps = make([]string, 20)
 }
 
-func StartVM(folder string) {
+func StartVM(folder string, request common.TestRequest) {
 	// Find an available IP
 	maskLong := "255.255.255.252"
 	maskShort := "/30"
@@ -216,7 +216,7 @@ func StartVM(folder string) {
 	vmAddresses[hostDevName] = fcAddress
 
 	// We are ready for tests
-	StartTest(hostDevName)
+	StartTest(hostDevName, request)
 }
 
 func createDisk(name string, folder string) error {
@@ -276,17 +276,17 @@ func createDisk(name string, folder string) error {
 	return nil
 }
 
-func StartTest(vmID string) {
+func StartTest(vmID string, testRequest common.TestRequest) {
 	_, ok := vmAddresses[vmID]
 	fmt.Println("[", vmID, "]", "Starting test for VM", vmID, "at", vmAddresses[vmID])
 	if ok {
 		// test purpose
 		data := common.VmInit{
-			ProgramType: common.PYTHON,
-			UserProgram: "program.py",
-			IsDirectory: false,
-			TestType:    common.TestTypeInputOutput,
-			TestCount:   1,
+			ProgramType: common.PYTHON, // should be dynamic
+			UserProgram: testRequest.UserProgram,
+			IsDirectory: false, // should be dynamic
+			TestType:    testRequest.TestType,
+			TestCount:   testRequest.TestCount,
 		}
 		b, _ := json.Marshal(data)
 
@@ -312,11 +312,28 @@ func StartTest(vmID string) {
 
 		fmt.Println("[", vmID, "]", "Init request sent to VM", vmID, "at", vmAddresses[vmID])
 
-		SendInput(vmID, "abc", "abc")
+		testJson := testRequest.Tests
+		test := common.InnerInputOutputTest{}
+		err = json.Unmarshal([]byte(testJson), &test)
+		if err != nil {
+			panic(err)
+		}
+		for i := range test.Inputs {
+			if !SendInput(vmID, test.Inputs[i], test.Outputs[i]) {
+				fmt.Println("[", vmID, "]", "Test failed for VM", vmID, "at", vmAddresses[vmID])
+				sendInnerTestResult(testRequest.ID, i, false)
+				sendTestResult(testRequest.ID, false)
+				return
+			} else {
+				sendInnerTestResult(testRequest.ID, i, true)
+			}
+		}
+		fmt.Println("[", vmID, "]", "Test passed for VM", vmID, "at", vmAddresses[vmID])
+		sendTestResult(testRequest.ID, true)
 	}
 }
 
-func SendInput(vmID string, input string, expectedOutput string) {
+func SendInput(vmID string, input string, expectedOutput string) bool {
 	var structInput = common.VmInput{ID: vmID, Input: input}
 
 	var b, _ = json.Marshal(structInput)
@@ -354,17 +371,17 @@ func SendInput(vmID string, input string, expectedOutput string) {
 	err = c.WriteMessage(websocket.TextMessage, []byte("output"))
 	if err != nil {
 		log.Fatalf("write: %v", err)
-		return
+		return false
 	}
 
 	receiveType, rsp, err := c.ReadMessage()
 	if err != nil {
 		log.Println("[", vmID, "]", "ReadMessage failed:", err)
-		return
+		return false
 	}
 	if receiveType != websocket.TextMessage {
 		log.Printf("received type(%d) != websocket.TextMessage(%d)\n", receiveType, websocket.TextMessage)
-		return
+		return false
 	}
 
 	// remove the last \n and unuseful spaces
@@ -374,8 +391,10 @@ func SendInput(vmID string, input string, expectedOutput string) {
 	log.Println("[", vmID, "]", "Received output:", rspStr, "expected:", expectedOutput)
 	if rspStr == expectedOutput {
 		fmt.Println("[", vmID, "]", "Test passed!")
+		return true
 	} else {
 		fmt.Println("[", vmID, "]", "Test failed!")
+		return false
 	}
 }
 

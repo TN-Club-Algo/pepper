@@ -19,7 +19,8 @@ func Connect(address string, password string) {
 		Password: password,
 		DB:       0,
 	})
-	listen()
+	fmt.Println("Connected to Redis.")
+	go listen()
 }
 
 func listen() {

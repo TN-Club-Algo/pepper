@@ -170,6 +170,7 @@ func StartVM(folder string, request common.TestRequest) {
 		})
 
 		if err == nil {
+			defer conn.Close()
 			break // SSH connection successful, break out of the loop
 		}
 
@@ -208,7 +209,6 @@ func StartVM(folder string, request common.TestRequest) {
 	}
 
 	session.Close()
-	conn.Close()
 
 	time.Sleep(500 * time.Millisecond)
 
@@ -217,6 +217,11 @@ func StartVM(folder string, request common.TestRequest) {
 
 	// We are ready for tests
 	StartTest(hostDevName, request)
+
+	// vm can be stopped now
+	session, _ = conn.NewSession()
+	session.Run("reboot")
+	fmt.Println("[", hostDevName, "]", "Stopping firecracker VM...")
 }
 
 func createDisk(name string, folder string) error {
@@ -321,15 +326,15 @@ func StartTest(vmID string, testRequest common.TestRequest) {
 		for i := range test.Inputs {
 			if !SendInput(vmID, test.Inputs[i], test.Outputs[i]) {
 				fmt.Println("[", vmID, "]", "Test failed for VM", vmID, "at", vmAddresses[vmID])
-				sendInnerTestResult(testRequest.ID, i, false)
-				sendTestResult(testRequest.ID, false)
+				go sendInnerTestResult(testRequest.ID, i, false)
+				go sendTestResult(testRequest.ID, false)
 				return
 			} else {
-				sendInnerTestResult(testRequest.ID, i, true)
+				go sendInnerTestResult(testRequest.ID, i, true)
 			}
 		}
 		fmt.Println("[", vmID, "]", "Test passed for VM", vmID, "at", vmAddresses[vmID])
-		sendTestResult(testRequest.ID, true)
+		go sendTestResult(testRequest.ID, true)
 	}
 }
 
@@ -396,8 +401,4 @@ func SendInput(vmID string, input string, expectedOutput string) bool {
 		fmt.Println("[", vmID, "]", "Test failed!")
 		return false
 	}
-}
-
-func EndVM() {
-	// Send reboot command, wait 1s, kill process if it exists and delete socket
 }

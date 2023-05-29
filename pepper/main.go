@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	Connect("127.0.0.1", "")
+	Connect("127.0.0.1:6379", "")
 
 	// Tick
 	go tick()

@@ -307,6 +307,9 @@ func StartTest(vmID string, testRequest common.TestRequest) {
 
 		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Sending init request to VM", vmID, "at", vmAddresses[vmID], "with data", string(b))
 
+		// wait 100ms
+		time.Sleep(100 * time.Millisecond)
+
 		var request, err = http.NewRequest("PUT", "http://"+vmAddresses[vmID]+":"+strconv.FormatInt(common.RestPort, 10)+common.InitEndPoint, strings.NewReader(string(b)))
 		if err != nil {
 			panic(err)
@@ -320,6 +323,7 @@ func StartTest(vmID string, testRequest common.TestRequest) {
 		if err != nil {
 			panic(err)
 		}
+		defer client.CloseIdleConnections()
 		defer func(Body io.ReadCloser) {
 			err := Body.Close()
 			if err != nil {

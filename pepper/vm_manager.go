@@ -220,11 +220,11 @@ func StartVM(folder string, request common.TestRequest) {
 	StartTest(hostDevName, request)
 
 	// Cleanup
-	/*session, _ = conn.NewSession()
+	session, _ = conn.NewSession()
 	session.Run("reboot")
 	fcCmd.Process.Kill()
 	exec.Command("rm", "-f", "/root/rootfs"+hostDevName+".ext4").Run()
-	exec.Command("rm", "-f", "/root/"+hostDevName+".ext4").Run()*/
+	exec.Command("rm", "-f", "/root/"+hostDevName+".ext4").Run()
 
 	fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "Stopping firecracker VM...")
 }
@@ -338,7 +338,7 @@ func StartTest(vmID string, testRequest common.TestRequest) {
 				go sendInnerTestResult(testRequest.ID, i, true)
 			}
 		}
-		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Test passed for VM", vmID, "at", vmAddresses[vmID])
+		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "All tests passed for VM", vmID, "at", vmAddresses[vmID])
 		go sendTestResult(testRequest.ID, true)
 	}
 }
@@ -394,13 +394,11 @@ func SendInput(vmID string, input string, expectedOutput string) bool {
 		return false
 	}
 
-	fmt.Println(string(rsp))
-
 	// remove the last \n and unuseful spaces
 	rspStr := strings.Trim(string(rsp), "\n")
 	rspStr = strings.Trim(rspStr, " ")
 
-	log.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Received output:", rspStr, "expected:", expectedOutput)
+	fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Received output:", rspStr, "expected:", expectedOutput)
 	if rspStr == expectedOutput {
 		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Test passed!")
 		return true

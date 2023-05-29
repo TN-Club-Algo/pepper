@@ -29,7 +29,7 @@ func main() {
 					}
 					bytes, _ := json.Marshal(tests)
 
-					StartVM("/root/test-vm", common.TestRequest{
+					go StartVM("/root/test-vm", common.TestRequest{
 						TestType:    common.TestTypeInputOutput,
 						Tests:       string(bytes),
 						UserProgram: "program.py",
@@ -40,7 +40,7 @@ func main() {
 				}
 				folder := split[1]
 				fmt.Println("Starting VM with folder", folder, "...")
-				StartVM(folder, common.TestRequest{})
+				go StartVM(folder, common.TestRequest{})
 			} else if cmd == "exit" || cmd == "stop" {
 				os.Exit(0)
 				return

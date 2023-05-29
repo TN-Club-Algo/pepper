@@ -49,7 +49,7 @@ func listen() {
 		}
 
 		// Create VM
-		StartVM(test.UserProgram, test)
+		go StartVM(test.UserProgram, test)
 	}
 }
 

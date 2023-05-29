@@ -313,7 +313,9 @@ func StartTest(vmID string, testRequest common.TestRequest) {
 		}
 
 		request.Header.Set("Content-Type", "application/json; charset=UTF-8")
-		client := &http.Client{}
+		client := &http.Client{
+			Timeout: 2 * time.Second,
+		}
 		response, err := client.Do(request)
 		if err != nil {
 			panic(err)

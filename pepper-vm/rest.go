@@ -95,31 +95,31 @@ func startTests(vmInit common.VmInit) {
 
 				stdin, err := cmd.StdinPipe()
 				if err != nil {
-					fmt.Println(err)
+					fmt.Println("Error getting stdin pipe:", err)
 				}
 				pipe, err := cmd.StdoutPipe()
 				if err != nil {
-					fmt.Println(err)
+					fmt.Println("Error getting stdout pipe:", err)
 				}
 				err = cmd.Start()
 				if err != nil {
-					fmt.Println(err)
+					fmt.Println("Error starting command:", err)
 				}
 				_, err = stdin.Write(inputData)
 				if err != nil {
-					fmt.Println(err)
+					fmt.Println("Error writing data to stdin:", err)
 				}
 				err = stdin.Close()
 				if err != nil {
-					fmt.Println(err)
+					fmt.Println("Error closing stdin pipe:", err)
 				}
 				output, err := io.ReadAll(pipe)
 				if err != nil {
-					fmt.Println(err)
+					fmt.Println("Error reading stdout pipe:", err)
 				}
 				err = cmd.Wait()
 				if err != nil {
-					fmt.Println(err)
+					fmt.Println("Error waiting for the command to exit:", err)
 				}
 
 				fmt.Println("Output is", string(output))

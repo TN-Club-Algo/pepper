@@ -32,7 +32,7 @@ func main() {
 					StartVM("/root/test-vm", common.TestRequest{
 						TestType:    common.TestTypeInputOutput,
 						Tests:       string(bytes),
-						UserProgram: "/root/test-vm",
+						UserProgram: "program.py",
 						TestCount:   1,
 						ID:          "iamanid",
 					})

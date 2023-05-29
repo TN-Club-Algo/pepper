@@ -24,8 +24,8 @@ func main() {
 				if len(split) != 2 {
 					fmt.Println("Starting test VM...")
 					tests := common.InnerInputOutputTest{
-						Inputs:  []string{"1 2 3 4 5"},
-						Outputs: []string{"1 2 3 4 5"},
+						Inputs:  []string{"1 2 3 4 5", "je suis un pain"},
+						Outputs: []string{"1 2 3 4 5", "je suis un pain"},
 					}
 					bytes, _ := json.Marshal(tests)
 
@@ -33,7 +33,7 @@ func main() {
 						TestType:    common.TestTypeInputOutput,
 						Tests:       string(bytes),
 						UserProgram: "program.py",
-						TestCount:   1,
+						TestCount:   2,
 						ID:          "iamanid",
 					})
 					continue

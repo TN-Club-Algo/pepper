@@ -18,18 +18,19 @@ import (
 )
 
 const (
-	baseIp string = "10.0.0.1"
+	baseIp          string = "10.0.0.1"
+	baseHostDevName string = "10001"
 )
 
 var (
 	vmAddresses    map[string]string
-	usedIps        []string
+	usedIps        map[string]string
 	justStartedVMs []string
 )
 
 func init() {
 	vmAddresses = make(map[string]string)
-	usedIps = make([]string, 20)
+	usedIps = make(map[string]string)
 }
 
 func StartVM(folder string, request common.TestRequest) {
@@ -37,12 +38,13 @@ func StartVM(folder string, request common.TestRequest) {
 	maskLong := "255.255.255.252"
 	maskShort := "/30"
 
-	fcAddress := GetAvailableIP(baseIp, usedIps)
-	usedIps = append(usedIps, fcAddress)
-	tapAddress := GetAvailableIP(baseIp, usedIps)
-	usedIps = append(usedIps, tapAddress)
+	fcAddress := GetAvailableIP(baseHostDevName, baseIp)
+	hostDevName := strings.ReplaceAll(fcAddress, ".", "")
+	usedIps[hostDevName] = fcAddress
 
-	hostDevName := strings.Replace(fcAddress, ".", "", -1)
+	tapAddress := GetAvailableIP(baseHostDevName, baseIp)
+	tapHost := strings.ReplaceAll(tapAddress, ".", "")
+	usedIps[tapHost] = tapAddress
 
 	fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "Found fcAddress:", fcAddress)
 
@@ -126,9 +128,9 @@ func StartVM(folder string, request common.TestRequest) {
 	}
 
 	justStartedVMs = append(justStartedVMs, hostDevName)
-	// remove after 7s
+	// remove after 12s
 	go func() {
-		time.Sleep(7 * time.Second)
+		time.Sleep(12 * time.Second)
 		for i := range justStartedVMs {
 			if justStartedVMs[i] == hostDevName {
 				justStartedVMs = append(justStartedVMs[:i], justStartedVMs[i+1:]...)
@@ -153,11 +155,11 @@ func StartVM(folder string, request common.TestRequest) {
 	var conn *ssh.Client
 
 	if err != nil {
-		fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "Error creating ssh connection:", err)
+		fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "(PVKEY) Error creating ssh connection:", err)
 		return
 	}
 
-	maxAttempts := 5
+	maxAttempts := 10
 	attempt := 1
 	for attempt <= maxAttempts {
 		time.Sleep(1 * time.Second) // Wait for a few seconds before attempting SSH connection
@@ -179,7 +181,7 @@ func StartVM(folder string, request common.TestRequest) {
 	}
 
 	if attempt > maxAttempts {
-		fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "Error creating ssh connection:", err)
+		fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "(ATTEMPTS) Error creating ssh connection:", err)
 		return
 	}
 
@@ -226,7 +228,10 @@ func StartVM(folder string, request common.TestRequest) {
 	exec.Command("rm", "-f", "/root/rootfs"+hostDevName+".ext4").Run()
 	exec.Command("rm", "-f", "/root/"+hostDevName+".ext4").Run()
 
-	fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "Stopping firecracker VM...")
+	delete(usedIps, hostDevName)
+	delete(usedIps, tapHost)
+	delete(vmAddresses, hostDevName)
+	fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "Stopped firecracker VM.")
 }
 
 func createDisk(name string, folder string) error {

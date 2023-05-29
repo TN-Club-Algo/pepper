@@ -1,18 +1,24 @@
 package main
 
 import (
-	"AlgoTN/common"
 	"fmt"
 	"net"
 	"strings"
 )
 
-func GetAvailableIP(baseIP string, usedIPs []string) string {
+func GetAvailableIP(baseIPHostName string, baseIP string) string {
 	ip := baseIP
+	hostName := baseIPHostName
 
-	for common.SliceContains(usedIPs, ip) {
-		ip, _ = GetNextIP(ip)
+	for {
+		if val, ok := usedIps[hostName]; ok {
+			ip, _ = GetNextIP(val)
+			hostName = strings.ReplaceAll(ip, ".", "")
+		} else {
+			break
+		}
 	}
+
 	return ip
 }
 

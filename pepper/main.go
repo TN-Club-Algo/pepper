@@ -2,6 +2,7 @@ package main
 
 import (
 	"AlgoTN/common"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -22,9 +23,15 @@ func main() {
 				split := strings.Split(cmd, " ")
 				if len(split) != 2 {
 					fmt.Println("Starting test VM...")
+					tests := common.InnerInputOutputTest{
+						Inputs:  []string{"1 2 3 4 5"},
+						Outputs: []string{"1 2 3 4 5"},
+					}
+					bytes, _ := json.Marshal(tests)
+
 					StartVM("/root/test-vm", common.TestRequest{
 						TestType:    common.TestTypeInputOutput,
-						Tests:       `{"input": "1 2 3 4 5", "output": "1 2 3 4 5"}`,
+						Tests:       string(bytes),
 						UserProgram: "/root/test-vm",
 						TestCount:   1,
 						ID:          "iamanid",

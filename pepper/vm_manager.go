@@ -219,11 +219,13 @@ func StartVM(folder string, request common.TestRequest) {
 	// We are ready for tests
 	StartTest(hostDevName, request)
 
-	// vm can be stopped now
-	session, _ = conn.NewSession()
+	// Cleanup
+	/*session, _ = conn.NewSession()
 	session.Run("reboot")
-	// kill remaining process
 	fcCmd.Process.Kill()
+	exec.Command("rm", "-f", "/root/rootfs"+hostDevName+".ext4").Run()
+	exec.Command("rm", "-f", "/root/"+hostDevName+".ext4").Run()*/
+
 	fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "Stopping firecracker VM...")
 }
 
@@ -391,6 +393,8 @@ func SendInput(vmID string, input string, expectedOutput string) bool {
 		log.Printf("received type(%d) != websocket.TextMessage(%d)\n", receiveType, websocket.TextMessage)
 		return false
 	}
+
+	fmt.Println(string(rsp))
 
 	// remove the last \n and unuseful spaces
 	rspStr := strings.Trim(string(rsp), "\n")

@@ -42,7 +42,9 @@ func StartVM(folder string) {
 	tapAddress := GetAvailableIP(baseIp, usedIps)
 	usedIps = append(usedIps, tapAddress)
 
-	fmt.Println("Found fcAddress:", fcAddress)
+	hostDevName := strings.Replace(fcAddress, ".", "", -1)
+
+	fmt.Println("[", hostDevName, "]", "Found fcAddress:", fcAddress)
 
 	// Edit config
 	b, err := os.ReadFile("/root/vm_config.json")
@@ -50,24 +52,30 @@ func StartVM(folder string) {
 		return
 	}
 
-	hostDevName := strings.Replace(fcAddress, ".", "", -1)
-
-	fmt.Println("Determined hostname:", hostDevName)
+	fmt.Println("[", hostDevName, "]", "Determined hostname:", hostDevName)
 
 	kernelBootArgs := "ro console=ttyS0 reboot=k panic=1 pci=off"
 	kernelBootArgs += " ip=" + fcAddress + "::" + tapAddress + ":" + maskLong + "::eth0:off"
 
 	config := string(b)
 	// new mac fcAddress is the ip fcAddress in hex and 00 00 at the end
-	config = strings.Replace(config, "kernelBootArgs", kernelBootArgs, 1)                    // kernel boot args
-	config = strings.Replace(config, "AA:BB:CC:DD:EE:FF", ipv4ToHex(fcAddress)+":00:00", 1)  // mac fcAddress
-	config = strings.Replace(config, "2048", "2048", 1)                                      // ram
-	config = strings.Replace(config, "fc0", hostDevName, 1)                                  // host network name
-	config = strings.Replace(config, "/root/fc1-disk.ext4", "/root/"+hostDevName+".ext4", 1) // initrd location
+	config = strings.Replace(config, "kernelBootArgs", kernelBootArgs, 1)                        // kernel boot args
+	config = strings.Replace(config, "AA:BB:CC:DD:EE:FF", ipv4ToHex(fcAddress)+":00:00", 1)      // mac fcAddress
+	config = strings.Replace(config, "2048", "2048", 1)                                          // ram
+	config = strings.Replace(config, "fc0", hostDevName, 1)                                      // host network name
+	config = strings.Replace(config, "/root/rootfs.ext4", "/root/rootfs"+hostDevName+".ext4", 1) // disk location
+	config = strings.Replace(config, "/root/fc1-disk.ext4", "/root/"+hostDevName+".ext4", 1)     // additional disk location
 
 	//defer os.Remove("/root/" + hostDevName + ".ext4")
 
-	fmt.Println("Temp config adjusted.")
+	fmt.Println("[", hostDevName, "]", "Temp config adjusted.")
+
+	// Copy rootfs
+	exec.Command("rm", "-f", "/root/rootfs"+hostDevName+".ext4")
+	err = exec.Command("cp", "/root/rootfs.ext4", "/root/rootfs"+hostDevName+".ext4").Run()
+	if err != nil {
+		return
+	}
 
 	// Share user's program and test program using initrd
 	err = createDisk(hostDevName, folder)
@@ -76,7 +84,7 @@ func StartVM(folder string) {
 	}
 	//exec.Command("cd root/" + folder + " ; find . -print0 | cpio --null --create --verbose --format=newc > " + hostDevName + ".cpio")
 
-	fmt.Println("Temp disk created with user program and pepper-vm.")
+	fmt.Println("[", hostDevName, "]", "Temp disk created with user program and pepper-vm.")
 
 	// Create firecracker VM config
 	configFile := "temp_vm_config_" + hostDevName + ".json"
@@ -86,14 +94,14 @@ func StartVM(folder string) {
 		return
 	}
 
-	fmt.Println("Starting Firecracker VM...")
+	fmt.Println("[", hostDevName, "]", "Starting Firecracker VM...")
 
 	// Start firecracker VM
 	socket := "/tmp/firecracker" + hostDevName + ".socket"
 	// Remove socket if it exists
 	err = exec.Command("rm", "-f", socket).Run()
 	if err != nil {
-		fmt.Println("Error removing socket:", err)
+		fmt.Println("[", hostDevName, "]", "Error removing socket:", err)
 		return
 	}
 
@@ -101,19 +109,19 @@ func StartVM(folder string) {
 	exec.Command("ip", "link", "del", hostDevName).Run()
 	err = exec.Command("ip", "tuntap", "add", "dev", hostDevName, "mode", "tap").Run()
 	if err != nil {
-		fmt.Println("Error creating host network:", err)
+		fmt.Println("[", hostDevName, "]", "Error creating host network:", err)
 		return
 	}
 	exec.Command("sysctl", "-w", "net.ipv4.conf."+hostDevName+".proxy_arp=1").Run()
 	exec.Command("sysctl", "-w", "net.ipv6.conf."+hostDevName+".disable_ipv6=1").Run()
 	err = exec.Command("ip", "addr", "add", tapAddress+maskShort, "dev", hostDevName).Run()
 	if err != nil {
-		fmt.Println("Error adding ip address:", err)
+		fmt.Println("[", hostDevName, "]", "Error adding ip address:", err)
 		return
 	}
 	err = exec.Command("ip", "link", "set", "dev", hostDevName, "up").Run()
 	if err != nil {
-		fmt.Println("Error setting host network up:", err)
+		fmt.Println("[", hostDevName, "]", "Error setting host network up:", err)
 		return
 	}
 
@@ -131,11 +139,11 @@ func StartVM(folder string) {
 
 	err = exec.Command("/root/firecracker-bin", "--api-sock", socket, "--config-file", configFile).Start()
 	if err != nil {
-		fmt.Println("Error starting firecracker VM:", err)
+		fmt.Println("[", hostDevName, "]", "Error starting firecracker VM:", err)
 		return
 	}
 
-	fmt.Println("Firecracker VM started!")
+	fmt.Println("[", hostDevName, "]", "Firecracker VM started!")
 
 	// Move user's program to container user and change permissions
 	key, _ := os.ReadFile("/root/.ssh/id_rsa")
@@ -144,7 +152,7 @@ func StartVM(folder string) {
 	var conn *ssh.Client
 
 	if err != nil {
-		fmt.Println("Error creating ssh connection:", err)
+		fmt.Println("[", hostDevName, "]", "Error creating ssh connection:", err)
 		return
 	}
 
@@ -169,11 +177,11 @@ func StartVM(folder string) {
 	}
 
 	if attempt > maxAttempts {
-		fmt.Println("Error creating ssh connection:", err)
+		fmt.Println("[", hostDevName, "]", "Error creating ssh connection:", err)
 		return
 	}
 
-	fmt.Println("SSH connection successful!")
+	fmt.Println("[", hostDevName, "]", "SSH connection successful!")
 
 	session, _ := conn.NewSession()
 
@@ -193,7 +201,7 @@ func StartVM(folder string) {
 	}
 	command := strings.Join(commands, "; ")
 
-	fmt.Println("Running commands...")
+	fmt.Println("[", hostDevName, "]", "Running commands...")
 
 	if err := session.Start(command); err != nil {
 		panic("Failed to run command: " + command + "\nBecause: " + err.Error())
@@ -204,7 +212,7 @@ func StartVM(folder string) {
 
 	time.Sleep(500 * time.Millisecond)
 
-	fmt.Println("Firecracker VM ready!")
+	fmt.Println("[", hostDevName, "]", "Firecracker VM ready!")
 	vmAddresses[hostDevName] = fcAddress
 
 	// We are ready for tests
@@ -215,43 +223,43 @@ func createDisk(name string, folder string) error {
 	cmd := exec.Command("dd", "if=/dev/zero", "of="+name+".ext4", "bs=1M", "count=20")
 	err := cmd.Run()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[", name, "]", err)
 		return err
 	}
 	cmd = exec.Command("mkfs.ext4", name+".ext4")
 	err = cmd.Run()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[", name, "]", err)
 		return err
 	}
 	cmd = exec.Command("rm", "-rf", "/tmp/"+name)
 	err = cmd.Run()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[", name, "]", err)
 		return err
 	}
 	cmd = exec.Command("mkdir", "-p", "/tmp/"+name)
 	err = cmd.Run()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[", name, "]", err)
 		return err
 	}
 	cmd = exec.Command("mount", name+".ext4", "/tmp/"+name)
 	err = cmd.Run()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[", name, "]", err)
 		return err
 	}
 	cmd = exec.Command("cp", "-r", folder+"/.", "/tmp/"+name)
 	err = cmd.Run()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[", name, "]", err)
 		return err
 	}
 	cmd = exec.Command("umount", "/tmp/"+name)
 	err = cmd.Run()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[", name, "]", err)
 		return err
 	}
 
@@ -270,7 +278,7 @@ func createDisk(name string, folder string) error {
 
 func StartTest(vmID string) {
 	_, ok := vmAddresses[vmID]
-	fmt.Println("Starting test for VM", vmID, "at", vmAddresses[vmID])
+	fmt.Println("[", vmID, "]", "Starting test for VM", vmID, "at", vmAddresses[vmID])
 	if ok {
 		// test purpose
 		data := common.VmInit{
@@ -282,7 +290,7 @@ func StartTest(vmID string) {
 		}
 		b, _ := json.Marshal(data)
 
-		fmt.Println("Sending init request to VM", vmID, "at", vmAddresses[vmID], "with data", string(b))
+		fmt.Println("[", vmID, "]", "Sending init request to VM", vmID, "at", vmAddresses[vmID], "with data", string(b))
 
 		var request, err = http.NewRequest("PUT", "http://"+vmAddresses[vmID]+":"+strconv.FormatInt(common.RestPort, 10)+common.InitEndPoint, strings.NewReader(string(b)))
 		if err != nil {
@@ -302,7 +310,7 @@ func StartTest(vmID string) {
 			}
 		}(response.Body)
 
-		fmt.Println("Init request sent to VM", vmID, "at", vmAddresses[vmID])
+		fmt.Println("[", vmID, "]", "Init request sent to VM", vmID, "at", vmAddresses[vmID])
 
 		SendInput(vmID, "abc", "abc")
 	}
@@ -312,7 +320,7 @@ func SendInput(vmID string, input string, expectedOutput string) {
 	var structInput = common.VmInput{ID: vmID, Input: input}
 
 	var b, _ = json.Marshal(structInput)
-	fmt.Println("Sending input to VM", vmID, "at", vmAddresses[vmID], "with data", string(b))
+	fmt.Println("[", vmID, "]", "Sending input to VM", vmID, "at", vmAddresses[vmID], "with data", string(b))
 
 	var request, err = http.NewRequest("PUT", "http://"+vmAddresses[vmID]+":"+strconv.FormatInt(common.RestPort, 10)+common.InputEndpoint, strings.NewReader(string(b)))
 	if err != nil {
@@ -332,8 +340,8 @@ func SendInput(vmID string, input string, expectedOutput string) {
 		}
 	}(response.Body)
 
-	fmt.Println("Input sent to VM", vmID, "at", vmAddresses[vmID])
-	fmt.Println("Waiting for result from VM", vmID, "at", vmAddresses[vmID])
+	fmt.Println("[", vmID, "]", "Input sent to VM", vmID, "at", vmAddresses[vmID])
+	fmt.Println("[", vmID, "]", "Waiting for result from VM", vmID, "at", vmAddresses[vmID])
 
 	// Wait for the result on the websocket
 	u := url.URL{Scheme: "ws", Host: vmAddresses[vmID] + ":8888", Path: "/ws"}
@@ -351,7 +359,7 @@ func SendInput(vmID string, input string, expectedOutput string) {
 
 	receiveType, rsp, err := c.ReadMessage()
 	if err != nil {
-		log.Println("ReadMessage failed:", err)
+		log.Println("[", vmID, "]", "ReadMessage failed:", err)
 		return
 	}
 	if receiveType != websocket.TextMessage {
@@ -363,11 +371,11 @@ func SendInput(vmID string, input string, expectedOutput string) {
 	rspStr := strings.Trim(string(rsp), "\n")
 	rspStr = strings.Trim(rspStr, " ")
 
-	log.Println("Received output:", rspStr, "expected:", expectedOutput)
+	log.Println("[", vmID, "]", "Received output:", rspStr, "expected:", expectedOutput)
 	if rspStr == expectedOutput {
-		fmt.Println("Test passed!")
+		fmt.Println("[", vmID, "]", "Test passed!")
 	} else {
-		fmt.Println("Test failed!")
+		fmt.Println("[", vmID, "]", "Test failed!")
 	}
 }
 

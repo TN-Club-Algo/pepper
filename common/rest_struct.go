@@ -17,9 +17,10 @@ type VmInput struct {
 }
 
 type InnerTestResult struct {
-	ID    string `json:"id"`
-	Index int    `json:"index"`
-	Ok    bool   `json:"ok"`
+	ID     string `json:"id"`
+	Index  int    `json:"index"`
+	Answer string `json:"answer"`
+	Ok     bool   `json:"ok"`
 }
 
 type TestResult struct {
@@ -28,11 +29,12 @@ type TestResult struct {
 }
 
 type TestRequest struct {
-	ID          string `json:"id"`          // test id
-	UserProgram string `json:"userProgram"` // user program location
-	TestType    string `json:"testType"`
-	TestCount   int    `json:"testCount"`
-	Tests       string `json:"tests"`
+	ID              string `json:"id"`              // test id
+	ProgramLocation string `json:"programLocation"` // user program location
+	UserProgram     string `json:"userProgram"`     // user main program
+	TestType        string `json:"testType"`
+	TestCount       int    `json:"testCount"`
+	Tests           string `json:"tests"`
 }
 
 type InnerInputOutputTest struct {

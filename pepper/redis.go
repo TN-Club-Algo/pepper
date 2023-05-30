@@ -39,6 +39,8 @@ func listen() {
 			panic(err)
 		}
 
+		fmt.Println("Received test request:", test)
+
 		if test.TestType == common.TestTypeInputOutput {
 			innerInputOutputTest := common.InnerInputOutputTest{}
 			err = json.Unmarshal([]byte(test.Tests), &innerInputOutputTest)
@@ -49,15 +51,16 @@ func listen() {
 		}
 
 		// Create VM
-		go StartVM(test.UserProgram, test)
+		go StartVM(test.ProgramLocation, test)
 	}
 }
 
 func sendInnerTestResult(testId string, testIndex int, result bool) {
 	innerTestOutput := common.InnerTestResult{
-		ID:    testId,
-		Index: testIndex,
-		Ok:    result,
+		ID:     testId,
+		Index:  testIndex,
+		Answer: "answer",
+		Ok:     result,
 	}
 
 	bytes, err := json.Marshal(innerTestOutput)

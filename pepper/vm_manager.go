@@ -35,8 +35,10 @@ func init() {
 
 func StartVM(folder string, request common.TestRequest) {
 	// Find an available IP
+	//maskLong := "255.255.255.0"
 	maskLong := "255.255.255.252"
 	maskShort := "/30"
+	//maskShort := "/24"
 
 	fcAddress := GetAvailableIP(baseHostDevName, baseIp)
 	hostDevName := strings.ReplaceAll(fcAddress, ".", "")
@@ -45,6 +47,14 @@ func StartVM(folder string, request common.TestRequest) {
 	tapAddress := GetAvailableIP(baseHostDevName, baseIp)
 	tapHost := strings.ReplaceAll(tapAddress, ".", "")
 	usedIps[tapHost] = tapAddress
+
+	nextIp := GetAvailableIP(baseHostDevName, baseIp)
+	nextHost := strings.ReplaceAll(nextIp, ".", "")
+	usedIps[nextHost] = nextIp
+
+	nextIp2 := GetAvailableIP(baseHostDevName, baseIp)
+	nextHost2 := strings.ReplaceAll(nextIp2, ".", "")
+	usedIps[nextHost2] = nextIp2
 
 	fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "Found fcAddress:", fcAddress)
 
@@ -230,6 +240,8 @@ func StartVM(folder string, request common.TestRequest) {
 
 	delete(usedIps, hostDevName)
 	delete(usedIps, tapHost)
+	delete(usedIps, nextHost)
+	delete(usedIps, nextHost2)
 	delete(vmAddresses, hostDevName)
 	fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "Stopped firecracker VM.")
 }

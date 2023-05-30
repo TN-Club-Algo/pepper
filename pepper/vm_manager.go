@@ -299,6 +299,13 @@ func createDisk(name string, folder string) error {
 		return err
 	}
 
+	cmd = exec.Command("rm", "-f", folder+"/pepper-vm")
+	err = cmd.Run()
+	if err != nil {
+		fmt.Println("[", name, time.Now().Format("15:04:05"), "]", err)
+		return err
+	}
+
 	return nil
 }
 

@@ -46,11 +46,11 @@ func listen() {
 	}
 }
 
-func sendInnerTestResult(testId string, testIndex int, result bool) {
+func sendInnerTestResult(testId string, testIndex int, answer string, result bool) {
 	innerTestOutput := common.InnerTestResult{
 		ID:     testId,
 		Index:  testIndex,
-		Answer: "answer",
+		Answer: answer,
 		Ok:     result,
 	}
 

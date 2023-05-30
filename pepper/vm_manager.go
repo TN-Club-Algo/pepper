@@ -8,6 +8,7 @@ import (
 	"golang.org/x/crypto/ssh"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -351,6 +352,8 @@ func StartTest(vmID string, testRequest common.TestRequest) {
 
 		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Init request sent to VM", vmID, "at", vmAddresses[vmID])
 
+		// TODO: Wait for the VM to confirm, if compile has failed, then send test results
+
 		//testJson := testRequest.Tests
 		test := testRequest.Tests
 		//err = json.Unmarshal([]byte(testJson), &test)
@@ -358,13 +361,14 @@ func StartTest(vmID string, testRequest common.TestRequest) {
 			panic(err)
 		}
 		for i := range test.Inputs {
-			if !SendInput(vmID, test.Inputs[i], test.Outputs[i]) {
+			passed, output := SendInput(vmID, test.Inputs[i], test.Outputs[i])
+			if !passed {
 				fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Test failed for VM", vmID, "at", vmAddresses[vmID])
-				go sendInnerTestResult(testRequest.ID, i, false)
+				go sendInnerTestResult(testRequest.ID, i, "Test failed: "+output, false)
 				go sendTestResult(testRequest.ID, false)
 				return
 			} else {
-				go sendInnerTestResult(testRequest.ID, i, true)
+				go sendInnerTestResult(testRequest.ID, i, "Test passed", true)
 			}
 		}
 		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "All tests passed for VM", vmID, "at", vmAddresses[vmID])
@@ -372,7 +376,7 @@ func StartTest(vmID string, testRequest common.TestRequest) {
 	}
 }
 
-func SendInput(vmID string, input string, expectedOutput string) bool {
+func SendInput(vmID string, input string, expectedOutput string) (bool, string) {
 	var structInput = common.VmInput{ID: vmID, Input: input}
 
 	var b, _ = json.Marshal(structInput)
@@ -399,7 +403,7 @@ func SendInput(vmID string, input string, expectedOutput string) bool {
 	fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Input sent to VM", vmID, "at", vmAddresses[vmID])
 	fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Waiting for result from VM", vmID, "at", vmAddresses[vmID])
 
-	// Wait for the result on the websocket
+	// Wait for the result on the websocket for max 1 second
 	u := url.URL{Scheme: "ws", Host: vmAddresses[vmID] + ":8888", Path: "/ws"}
 	c, res, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
@@ -410,17 +414,24 @@ func SendInput(vmID string, input string, expectedOutput string) bool {
 	err = c.WriteMessage(websocket.TextMessage, []byte("output"))
 	if err != nil {
 		log.Fatalf("write: %v", err)
-		return false
+		return false, "Fatal error"
 	}
+
+	c.SetReadDeadline(time.Now().Add(1 * time.Second))
 
 	receiveType, rsp, err := c.ReadMessage()
 	if err != nil {
+		// is it a timeout?
+		if err, ok := err.(net.Error); ok && err.Timeout() {
+			log.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Timeout on VM", vmID, "at", vmAddresses[vmID])
+			return false, "Timeout"
+		}
 		log.Println("[", vmID, time.Now().Format("15:04:05"), "]", "ReadMessage failed:", err)
-		return false
+		return false, "Fatal error"
 	}
 	if receiveType != websocket.TextMessage {
 		log.Printf("received type(%d) != websocket.TextMessage(%d)\n", receiveType, websocket.TextMessage)
-		return false
+		return false, "Fatal error"
 	}
 
 	// remove the last \n and unuseful spaces
@@ -430,9 +441,9 @@ func SendInput(vmID string, input string, expectedOutput string) bool {
 	fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Received output:", rspStr, "expected:", expectedOutput)
 	if rspStr == expectedOutput {
 		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Test passed!")
-		return true
+		return true, ""
 	} else {
 		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Test failed!")
-		return false
+		return false, "Wrong answer"
 	}
 }

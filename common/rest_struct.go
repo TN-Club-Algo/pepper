@@ -38,8 +38,8 @@ type TestRequest struct {
 }
 
 type InnerInputOutputTest struct {
-	Inputs  []string `json:"inputs"`
-	Outputs []string `json:"outputs"`
+	Inputs  []string `json:"input"`
+	Outputs []string `json:"output"`
 }
 
 type VmInit struct {

@@ -89,6 +89,8 @@ func StartVM(folder string, request common.TestRequest) {
 		return
 	}
 
+	fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "Copied rootfs.")
+
 	// Share user's program and test program using initrd
 	err = createDisk(hostDevName, folder)
 	if err != nil {

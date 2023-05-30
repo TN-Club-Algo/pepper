@@ -33,6 +33,8 @@ func listen() {
 			panic(err)
 		}
 
+		fmt.Println("Received test raw:", msg.Payload)
+
 		test := common.TestRequest{}
 		err = json.Unmarshal([]byte(msg.Payload), &test)
 		if err != nil {

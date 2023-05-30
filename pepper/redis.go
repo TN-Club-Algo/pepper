@@ -41,17 +41,6 @@ func listen() {
 			panic(err)
 		}
 
-		fmt.Println("Received test request:", test)
-
-		if test.TestType == common.TestTypeInputOutput {
-			innerInputOutputTest := test.Tests
-			//err = json.Unmarshal([]byte(test.Tests), &innerInputOutputTest)
-			if err != nil {
-				panic(err)
-			}
-			fmt.Println(innerInputOutputTest)
-		}
-
 		// Create VM
 		go StartVM(test.ProgramLocation, test)
 	}

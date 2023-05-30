@@ -342,9 +342,9 @@ func StartTest(vmID string, testRequest common.TestRequest) {
 
 		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Init request sent to VM", vmID, "at", vmAddresses[vmID])
 
-		testJson := testRequest.Tests
-		test := common.InnerInputOutputTest{}
-		err = json.Unmarshal([]byte(testJson), &test)
+		//testJson := testRequest.Tests
+		test := testRequest.Tests
+		//err = json.Unmarshal([]byte(testJson), &test)
 		if err != nil {
 			panic(err)
 		}

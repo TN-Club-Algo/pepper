@@ -2,7 +2,6 @@ package main
 
 import (
 	"AlgoTN/common"
-	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -27,11 +26,11 @@ func main() {
 						Inputs:  []string{"1 2 3 4 5", "je suis un pain"},
 						Outputs: []string{"1 2 3 4 5", "je suis un pain"},
 					}
-					bytes, _ := json.Marshal(tests)
+					//bytes, _ := json.Marshal(tests)
 
 					go StartVM("/root/test-vm", common.TestRequest{
 						TestType:    common.TestTypeInputOutput,
-						Tests:       string(bytes),
+						Tests:       tests,
 						UserProgram: "program.py",
 						TestCount:   2,
 						ID:          "iamanid",

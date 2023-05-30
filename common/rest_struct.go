@@ -29,12 +29,12 @@ type TestResult struct {
 }
 
 type TestRequest struct {
-	ID              string `json:"id"`              // test id
-	ProgramLocation string `json:"programLocation"` // user program location
-	UserProgram     string `json:"userProgram"`     // user main program
-	TestType        string `json:"testType"`
-	TestCount       int    `json:"testCount"`
-	Tests           string `json:"tests"`
+	ID              string               `json:"id"`              // test id
+	ProgramLocation string               `json:"programLocation"` // user program location
+	UserProgram     string               `json:"userProgram"`     // user main program
+	TestType        string               `json:"testType"`
+	TestCount       int                  `json:"testCount"`
+	Tests           InnerInputOutputTest `json:"tests"`
 }
 
 type InnerInputOutputTest struct {

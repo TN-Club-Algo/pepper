@@ -44,8 +44,8 @@ func listen() {
 		fmt.Println("Received test request:", test)
 
 		if test.TestType == common.TestTypeInputOutput {
-			innerInputOutputTest := common.InnerInputOutputTest{}
-			err = json.Unmarshal([]byte(test.Tests), &innerInputOutputTest)
+			innerInputOutputTest := test.Tests
+			//err = json.Unmarshal([]byte(test.Tests), &innerInputOutputTest)
 			if err != nil {
 				panic(err)
 			}

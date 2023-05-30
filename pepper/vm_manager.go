@@ -247,8 +247,15 @@ func StartVM(folder string, request common.TestRequest) {
 }
 
 func createDisk(name string, folder string) error {
-	cmd := exec.Command("dd", "if=/dev/zero", "of="+name+".ext4", "bs=1M", "count=20")
+	cmd := exec.Command("cp", "/root/pepper-vm", folder+"/pepper-vm")
 	err := cmd.Run()
+	if err != nil {
+		fmt.Println("[", name, time.Now().Format("15:04:05"), "]", err)
+		return err
+	}
+
+	cmd = exec.Command("dd", "if=/dev/zero", "of="+name+".ext4", "bs=1M", "count=20")
+	err = cmd.Run()
 	if err != nil {
 		fmt.Println("[", name, time.Now().Format("15:04:05"), "]", err)
 		return err
@@ -289,16 +296,6 @@ func createDisk(name string, folder string) error {
 		fmt.Println("[", name, time.Now().Format("15:04:05"), "]", err)
 		return err
 	}
-
-	/*filesToMove := []string{"/root/pepper-vm"}
-	for _, fileToMove := range filesToMove {
-		srcPath := fileToMove
-		destPath := filepath.Join(programPath, fileToMove)
-
-		if err := os.Rename(srcPath, destPath); err != nil {
-			return err
-		}
-	}*/
 
 	return nil
 }

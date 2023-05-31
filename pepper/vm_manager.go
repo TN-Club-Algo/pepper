@@ -235,7 +235,7 @@ func StartVM(folder string, request common.TestRequest) {
 	StartTest(hostDevName, request)
 
 	// Cleanup
-	/*session, _ = conn.NewSession()
+	session, _ = conn.NewSession()
 	session.Run("reboot")
 	fcCmd.Process.Kill()
 	exec.Command("rm", "-f", "/root/rootfs"+hostDevName+".ext4").Run()
@@ -245,7 +245,7 @@ func StartVM(folder string, request common.TestRequest) {
 	delete(usedIps, tapHost)
 	delete(usedIps, nextHost)
 	delete(usedIps, nextHost2)
-	delete(vmAddresses, hostDevName)*/
+	delete(vmAddresses, hostDevName)
 	fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "Stopped firecracker VM.")
 }
 

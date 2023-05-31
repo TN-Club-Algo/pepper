@@ -322,6 +322,7 @@ func StartTest(vmID string, testRequest common.TestRequest) {
 			TestType:    testRequest.TestType,
 			TestCount:   testRequest.TestCount,
 		}
+		problemName := testRequest.ProblemName
 		b, _ := json.Marshal(data)
 
 		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Sending init request to VM", vmID, "at", vmAddresses[vmID], "with data", string(b))
@@ -364,11 +365,11 @@ func StartTest(vmID string, testRequest common.TestRequest) {
 			passed, output := SendInput(vmID, test.Inputs[i], test.Outputs[i])
 			if !passed {
 				fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Test failed for VM", vmID, "at", vmAddresses[vmID])
-				go sendInnerTestResult(testRequest.ID, i, "Test failed: "+output, false)
+				go sendInnerTestResult(problemName, testRequest.ID, i, "Test failed: "+output, false)
 				go sendTestResult(testRequest.ID, false)
 				return
 			} else {
-				go sendInnerTestResult(testRequest.ID, i, "Test passed", true)
+				go sendInnerTestResult(problemName, testRequest.ID, i, "Test passed", true)
 			}
 		}
 		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "All tests passed for VM", vmID, "at", vmAddresses[vmID])

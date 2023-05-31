@@ -46,12 +46,13 @@ func listen() {
 	}
 }
 
-func sendInnerTestResult(testId string, testIndex int, answer string, result bool) {
+func sendInnerTestResult(problemName string, testId string, testIndex int, answer string, result bool) {
 	innerTestOutput := common.InnerTestResult{
-		ID:     testId,
-		Index:  testIndex,
-		Answer: answer,
-		Ok:     result,
+		ProblemName: problemName,
+		ID:          testId,
+		Index:       testIndex,
+		Answer:      answer,
+		Ok:          result,
 	}
 
 	bytes, err := json.Marshal(innerTestOutput)

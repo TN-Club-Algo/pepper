@@ -29,6 +29,7 @@ func main() {
 					//bytes, _ := json.Marshal(tests)
 
 					go StartVM("/root/test-vm", common.TestRequest{
+						ProblemName: "test",
 						TestType:    common.TestTypeInputOutput,
 						Tests:       tests,
 						UserProgram: "program.py",

@@ -68,7 +68,7 @@ func compileAndContinue(vmInit common.VmInit) {
 	case common.CPP:
 	case common.PYTHON:
 		// No compilation needed
-		exec.Command("mv", vmInit.UserProgram, "/home/container/program/"+vmInit.UserProgram)
+		//exec.Command("mv", "/root/"+vmInit.UserProgram, "/home/container/program/"+vmInit.UserProgram)
 	case common.C:
 
 	}
@@ -89,7 +89,8 @@ func startTests(vmInit common.VmInit) {
 				fmt.Println("Test type is input/output for Python")
 
 				cmd := exec.Command("python", vmInit.UserProgram) // let's assume it isn't a folder for now
-				cmd.Dir = "/home/container/program"
+				cmd.Dir = "/root"
+				//cmd.Dir = "/home/container/program"
 				inputData := <-inputDataChan
 
 				fmt.Println("Input data is", string(inputData))

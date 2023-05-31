@@ -316,9 +316,9 @@ func StartTest(vmID string, testRequest common.TestRequest) {
 	if ok {
 		// test purpose
 		data := common.VmInit{
-			ProgramType: common.PYTHON, // should be dynamic
-			UserProgram: testRequest.UserProgram,
-			IsDirectory: false, // should be dynamic
+			ProgramType: common.PYTHON,                                        // should be dynamic
+			UserProgram: "/home/container/program/" + testRequest.UserProgram, // should be dynamic
+			IsDirectory: false,                                                // should be dynamic
 			TestType:    testRequest.TestType,
 			TestCount:   testRequest.TestCount,
 		}

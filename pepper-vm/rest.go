@@ -68,6 +68,7 @@ func compileAndContinue(vmInit common.VmInit) {
 	case common.CPP:
 	case common.PYTHON:
 		// No compilation needed
+		exec.Command("mv", vmInit.UserProgram, "/home/container/program/"+vmInit.UserProgram)
 	case common.C:
 
 	}

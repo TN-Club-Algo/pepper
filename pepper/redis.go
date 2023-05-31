@@ -60,6 +60,8 @@ func sendInnerTestResult(problemName string, testId string, testIndex int, answe
 		panic(err)
 	}
 
+	fmt.Println(string(bytes))
+
 	err = rdb.Publish(ctx, "pepper-inner-test-results", string(bytes)).Err()
 	if err != nil {
 		panic(err)
@@ -76,6 +78,8 @@ func sendTestResult(testId string, allPassed bool) {
 	if err != nil {
 		panic(err)
 	}
+
+	fmt.Println(string(bytes))
 
 	err = rdb.Publish(ctx, "pepper-test-results", string(bytes)).Err()
 	if err != nil {

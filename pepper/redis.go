@@ -5,12 +5,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/pbnjay/memory"
 	"github.com/redis/go-redis/v9"
 )
 
 var (
 	ctx = context.Background()
 	rdb *redis.Client
+
+	TestQueue = make(chan common.TestRequest)
 )
 
 func Connect(address string, password string) {
@@ -39,6 +42,12 @@ func listen() {
 		err = json.Unmarshal([]byte(msg.Payload), &test)
 		if err != nil {
 			panic(err)
+		}
+
+		if common.SumMapValues(ActiveVMs) > MaxRam || memory.FreeMemory() < 4096 {
+			fmt.Println("Not enough RAM to start VM, waiting...")
+			TestQueue <- test
+			continue
 		}
 
 		// Create VM

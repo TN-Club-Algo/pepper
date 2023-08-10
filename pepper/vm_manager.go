@@ -27,6 +27,8 @@ var (
 	vmAddresses    map[string]string
 	usedIps        map[string]string
 	justStartedVMs []string
+
+	ActiveVMs map[string]int
 )
 
 func init() {
@@ -35,6 +37,9 @@ func init() {
 }
 
 func StartVM(folder string, request common.TestRequest) {
+	ActiveVMs[request.ID] = 2048 // ram in MB
+	defer delete(ActiveVMs, request.ID)
+
 	// Find an available IP
 	//maskLong := "255.255.255.0"
 	maskLong := "255.255.255.252"

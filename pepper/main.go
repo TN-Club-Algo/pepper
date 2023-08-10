@@ -7,6 +7,10 @@ import (
 	"strings"
 )
 
+var (
+	MaxRam = 16384
+)
+
 func main() {
 	Connect("127.0.0.1:6379", "")
 

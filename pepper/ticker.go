@@ -3,6 +3,7 @@ package main
 import (
 	"AlgoTN/common"
 	"fmt"
+	"github.com/pbnjay/memory"
 	"net/http"
 	"os"
 	"os/exec"
@@ -51,6 +52,15 @@ func tick() {
 					}
 				}
 
+			}
+		}
+
+		// Looking for VMs to start
+		if common.SumMapValues(ActiveVMs) < MaxRam && memory.FreeMemory() > 4096 {
+			select {
+			case test := <-TestQueue:
+				go StartVM(test.ProgramLocation, test)
+			default:
 			}
 		}
 

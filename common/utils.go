@@ -15,3 +15,11 @@ func SliceContains(s []string, e string) bool {
 	}
 	return false
 }
+
+func SumMapValues(m map[string]int) int {
+	sum := 0
+	for _, v := range m {
+		sum += v
+	}
+	return sum
+}

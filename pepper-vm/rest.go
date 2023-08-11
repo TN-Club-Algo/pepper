@@ -10,7 +10,7 @@ import (
 	"strconv"
 )
 
-var inputDataChan = make(chan []byte)
+var inputDataChan = make(chan common.VmInput)
 
 func StartREST() {
 	router := gin.Default()
@@ -35,7 +35,7 @@ func receiveInput(c *gin.Context) {
 
 	fmt.Println("Received input request with data", input)
 
-	inputDataChan <- []byte(input.Input)
+	inputDataChan <- input
 
 	c.Status(http.StatusOK)
 }
@@ -78,6 +78,8 @@ func compileAndContinue(vmInit common.VmInit) {
 
 func startTests(vmInit common.VmInit) {
 	for i := 0; i < vmInit.TestCount; i++ {
+		input := <-inputDataChan
+
 		// Run test
 		switch vmInit.ProgramType {
 		case common.JAVA:
@@ -85,15 +87,15 @@ func startTests(vmInit common.VmInit) {
 		case common.CPP:
 		case common.PYTHON:
 			// python
-			if vmInit.TestType == common.TestTypeInputOutput {
+			if input.Type == common.TestTypeInputOutput {
 				fmt.Println("Test type is input/output for Python")
 
 				cmd := exec.Command("python", vmInit.UserProgram) // let's assume it isn't a folder for now
 				cmd.Dir = "/root"
 				//cmd.Dir = "/home/container/program"
-				inputData := <-inputDataChan
+				inputData := input.Input
 
-				fmt.Println("Input data is", string(inputData))
+				fmt.Println("Input data is", inputData)
 
 				stdin, err := cmd.StdinPipe()
 				if err != nil {
@@ -107,7 +109,7 @@ func startTests(vmInit common.VmInit) {
 				if err != nil {
 					fmt.Println("Error starting command:", err)
 				}
-				_, err = stdin.Write(inputData)
+				_, err = stdin.Write([]byte(inputData))
 				if err != nil {
 					fmt.Println("Error writing data to stdin:", err)
 				}

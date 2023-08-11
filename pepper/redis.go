@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/pbnjay/memory"
 	"github.com/redis/go-redis/v9"
+	"strconv"
 )
 
 var (
@@ -51,17 +52,18 @@ func listen() {
 		}
 
 		// Create VM
-		go StartVM(test.ProgramLocation, test)
+		go StartVM(test.ProgramURL, test)
 	}
 }
 
-func sendInnerTestResult(problemName string, testId string, testIndex int, answer string, result bool) {
+func sendInnerTestResult(testId string, testIndex int, problemSlug string, result string, timeElapsed int, memoryUsed int) {
 	innerTestOutput := common.InnerTestResult{
-		ProblemName: problemName,
 		ID:          testId,
 		Index:       testIndex,
-		Answer:      answer,
-		Ok:          result,
+		ProblemSlug: problemSlug,
+		Result:      result,
+		TimeElapsed: timeElapsed,
+		MemoryUsed:  memoryUsed,
 	}
 
 	bytes, err := json.Marshal(innerTestOutput)
@@ -77,10 +79,11 @@ func sendInnerTestResult(problemName string, testId string, testIndex int, answe
 	}
 }
 
-func sendTestResult(testId string, allPassed bool) {
+func sendTestResult(testId string, problemSlug string, allPassed bool) {
 	testResult := common.TestResult{
-		ID: testId,
-		Ok: allPassed,
+		ID:          testId,
+		ProblemSlug: problemSlug,
+		Result:      strconv.FormatBool(allPassed),
 	}
 
 	bytes, err := json.Marshal(testResult)

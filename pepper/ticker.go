@@ -59,7 +59,7 @@ func tick() {
 		if common.SumMapValues(ActiveVMs) < MaxRam && memory.FreeMemory() > 4096 {
 			select {
 			case test := <-TestQueue:
-				go StartVM(test.ProgramLocation, test)
+				go StartVM(test.ProgramURL, test)
 			default:
 			}
 		}

@@ -36,7 +36,7 @@ func init() {
 	usedIps = make(map[string]string)
 }
 
-func StartVM(folder string, request common.TestRequest) {
+func StartVM(codeURL string, request common.TestRequest) {
 	ActiveVMs[request.ID] = 2048 // ram in MB
 	defer delete(ActiveVMs, request.ID)
 
@@ -98,7 +98,7 @@ func StartVM(folder string, request common.TestRequest) {
 	fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "Copied rootfs.")
 
 	// Share user's program and test program using initrd
-	err = createDisk(hostDevName, folder)
+	err = createDisk(hostDevName, codeURL)
 	if err != nil {
 		return
 	}
@@ -158,6 +158,7 @@ func StartVM(folder string, request common.TestRequest) {
 	}()
 
 	fcCmd := exec.Command("/root/firecracker-bin", "--api-sock", socket, "--config-file", configFile)
+	pid := fcCmd.Process.Pid
 	err = fcCmd.Start()
 	if err != nil {
 		fmt.Println("[", hostDevName, "]", "Error starting firecracker VM:", err)
@@ -237,7 +238,7 @@ func StartVM(folder string, request common.TestRequest) {
 	vmAddresses[hostDevName] = fcAddress
 
 	// We are ready for tests
-	StartTest(hostDevName, request)
+	StartTest(pid, hostDevName, request)
 
 	// Cleanup
 	session, _ = conn.NewSession()
@@ -254,16 +255,9 @@ func StartVM(folder string, request common.TestRequest) {
 	fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "Stopped firecracker VM.")
 }
 
-func createDisk(name string, folder string) error {
-	cmd := exec.Command("cp", "/root/pepper-vm", folder+"/pepper-vm")
+func createDisk(name string, codeURL string) error {
+	cmd := exec.Command("dd", "if=/dev/zero", "of="+name+".ext4", "bs=1M", "count=20")
 	err := cmd.Run()
-	if err != nil {
-		fmt.Println("[", name, time.Now().Format("15:04:05"), "]", err)
-		return err
-	}
-
-	cmd = exec.Command("dd", "if=/dev/zero", "of="+name+".ext4", "bs=1M", "count=20")
-	err = cmd.Run()
 	if err != nil {
 		fmt.Println("[", name, time.Now().Format("15:04:05"), "]", err)
 		return err
@@ -286,13 +280,20 @@ func createDisk(name string, folder string) error {
 		fmt.Println("[", name, time.Now().Format("15:04:05"), "]", err)
 		return err
 	}
+	cmd = exec.Command("cp", "/root/pepper-vm", "/tmp/"+name+"/pepper-vm")
+	err = cmd.Run()
+	if err != nil {
+		fmt.Println("[", name, time.Now().Format("15:04:05"), "]", err)
+		return err
+	}
+
 	cmd = exec.Command("mount", name+".ext4", "/tmp/"+name)
 	err = cmd.Run()
 	if err != nil {
 		fmt.Println("[", name, time.Now().Format("15:04:05"), "]", err)
 		return err
 	}
-	cmd = exec.Command("cp", "-r", folder+"/.", "/tmp/"+name)
+	cmd = exec.Command("curl", WebsiteAddress+codeURL, "-O", "-H", "x-auth-secret-key "+Secret, "--output-dir", "/tmp/"+name)
 	err = cmd.Run()
 	if err != nil {
 		fmt.Println("[", name, time.Now().Format("15:04:05"), "]", err)
@@ -305,17 +306,10 @@ func createDisk(name string, folder string) error {
 		return err
 	}
 
-	cmd = exec.Command("rm", "-f", folder+"/pepper-vm")
-	err = cmd.Run()
-	if err != nil {
-		fmt.Println("[", name, time.Now().Format("15:04:05"), "]", err)
-		return err
-	}
-
 	return nil
 }
 
-func StartTest(vmID string, testRequest common.TestRequest) {
+func StartTest(pid int, vmID string, testRequest common.TestRequest) {
 	_, ok := vmAddresses[vmID]
 	fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Starting test for VM", vmID, "at", vmAddresses[vmID])
 	if ok {
@@ -324,10 +318,8 @@ func StartTest(vmID string, testRequest common.TestRequest) {
 			ProgramType: common.PYTHON,           // should be dynamic
 			UserProgram: testRequest.UserProgram, // should be dynamic
 			IsDirectory: false,                   // should be dynamic
-			TestType:    testRequest.TestType,
-			TestCount:   testRequest.TestCount,
 		}
-		problemName := testRequest.ProblemName
+		problemSlug := testRequest.ProblemSlug
 		b, _ := json.Marshal(data)
 
 		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Sending init request to VM", vmID, "at", vmAddresses[vmID], "with data", string(b))
@@ -359,31 +351,34 @@ func StartTest(vmID string, testRequest common.TestRequest) {
 		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Init request sent to VM", vmID, "at", vmAddresses[vmID])
 
 		// TODO: Wait for the VM to confirm, if compile has failed, then send test results
+		problemInfo, _ := FetchProblemInfo(testRequest.InfoURL)
+		testCount := len(problemInfo.Tests)
 
-		//testJson := testRequest.Tests
-		test := testRequest.Tests
-		//err = json.Unmarshal([]byte(testJson), &test)
 		if err != nil {
 			panic(err)
 		}
-		for i := range test.Inputs {
-			passed, output := SendInput(vmID, test.Inputs[i], test.Outputs[i])
+		for i := 0; i < testCount; i++ {
+			passed, _, timeTaken, finalMemoryUsage := SendInput(pid, vmID, problemInfo.Tests[i].Type,
+				problemInfo.Tests[i].InputURL, problemInfo.Tests[i].OutputURL)
 			if !passed {
 				fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Test failed for VM", vmID, "at", vmAddresses[vmID])
-				go sendInnerTestResult(problemName, testRequest.ID, i, "Test failed: "+output, false)
-				go sendTestResult(testRequest.ID, false)
+				go sendInnerTestResult(testRequest.ID, i, problemSlug, "Wrong answer", timeTaken, finalMemoryUsage)
+				go sendTestResult(testRequest.ID, problemSlug, false)
 				return
 			} else {
-				go sendInnerTestResult(problemName, testRequest.ID, i, "Test passed", true)
+				go sendInnerTestResult(testRequest.ID, i, problemSlug, "Test passed", timeTaken, finalMemoryUsage)
 			}
 		}
 		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "All tests passed for VM", vmID, "at", vmAddresses[vmID])
-		go sendTestResult(testRequest.ID, true)
+		go sendTestResult(testRequest.ID, problemSlug, true)
 	}
 }
 
-func SendInput(vmID string, input string, expectedOutput string) (bool, string) {
-	var structInput = common.VmInput{ID: vmID, Input: input}
+// SendInput Returns if the test passed, the response, the time taken and the final memory usage
+func SendInput(pid int, vmID string, testType string, inputURL string, outputURL string) (bool, string, int, int) {
+	input, _ := DownloadAsText(inputURL)
+	output, _ := DownloadAsText(outputURL)
+	var structInput = common.VmInput{ID: vmID, Input: input, Type: testType}
 
 	var b, _ = json.Marshal(structInput)
 	fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Sending input to VM", vmID, "at", vmAddresses[vmID], "with data", string(b))
@@ -420,36 +415,44 @@ func SendInput(vmID string, input string, expectedOutput string) (bool, string) 
 	err = c.WriteMessage(websocket.TextMessage, []byte("output"))
 	if err != nil {
 		log.Fatalf("write: %v", err)
-		return false, "Fatal error"
+		return false, "Fatal error", -1, -1
 	}
 
-	c.SetReadDeadline(time.Now().Add(1 * time.Second))
+	start := time.Now().UnixMilli()
+	timeout := 1 * time.Second
+	c.SetReadDeadline(time.Now().Add(timeout))
 
 	receiveType, rsp, err := c.ReadMessage()
 	if err != nil {
 		// is it a timeout?
 		if err, ok := err.(net.Error); ok && err.Timeout() {
 			log.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Timeout on VM", vmID, "at", vmAddresses[vmID])
-			return false, "Timeout"
+			memory, _ := common.CalculateMemory(pid)
+			return false, "Timeout", int(timeout.Milliseconds()), memory
 		}
 		log.Println("[", vmID, time.Now().Format("15:04:05"), "]", "ReadMessage failed:", err)
-		return false, "Fatal error"
+		memory, _ := common.CalculateMemory(pid)
+		return false, "Fatal error", int(time.Now().UnixMilli() - start), memory
 	}
 	if receiveType != websocket.TextMessage {
 		log.Printf("received type(%d) != websocket.TextMessage(%d)\n", receiveType, websocket.TextMessage)
-		return false, "Fatal error"
+		memory, _ := common.CalculateMemory(pid)
+		return false, "Fatal error", int(time.Now().UnixMilli() - start), memory
 	}
+	end := time.Now().UnixMilli()
 
 	// remove the last \n and unuseful spaces
 	rspStr := strings.Trim(string(rsp), "\n")
 	rspStr = strings.Trim(rspStr, " ")
 
-	fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Received output:", rspStr, "expected:", expectedOutput)
-	if rspStr == expectedOutput {
+	fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Received output:", rspStr, "expected:", output)
+	if rspStr == output {
 		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Test passed!")
-		return true, ""
+		memory, _ := common.CalculateMemory(pid)
+		return true, "", int(end - start), memory
 	} else {
 		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Test failed!")
-		return false, "Wrong answer"
+		memory, _ := common.CalculateMemory(pid)
+		return false, "Wrong answer", int(end - start), memory
 	}
 }

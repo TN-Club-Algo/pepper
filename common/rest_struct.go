@@ -2,41 +2,56 @@ package common
 
 const (
 	JAVA   string = "java"
-	CPP    string = "cpp"
+	CPP    string = "c_cpp"
 	PYTHON string = "python"
 	C      string = "c"
+	KOTLIN string = "kotlin"
 )
 
 const (
-	TestTypeInputOutput string = "input/output"
+	TestTypeInputOutput string = "INPUT_OUTPUT"
 )
 
 type VmInput struct {
 	ID    string `json:"id"`
 	Input string `json:"input"`
+	Type  string `json:"type"`
 }
 
 type InnerTestResult struct {
-	ProblemName string `json:"problemName"`
-	ID          string `json:"id"`
+	ID          string `json:"testID"`
 	Index       int    `json:"index"`
-	Answer      string `json:"answer"`
-	Ok          bool   `json:"ok"`
+	ProblemSlug string `json:"problemSlug"`
+	Result      string `json:"result"`
+	TimeElapsed int    `json:"timeElapsed"`
+	MemoryUsed  int    `json:"memoryUsed"`
 }
 
 type TestResult struct {
-	ID string `json:"id"`
-	Ok bool   `json:"ok"`
+	ID          string `json:"testID"`
+	ProblemSlug string `json:"problemSlug"`
+	Result      string `json:"result"`
 }
 
 type TestRequest struct {
-	ProblemName     string               `json:"problemName"`
-	ID              string               `json:"id"`              // test id
-	ProgramLocation string               `json:"programLocation"` // user program location
-	UserProgram     string               `json:"userProgram"`     // user main program
-	TestType        string               `json:"testType"`
-	TestCount       int                  `json:"testCount"`
-	Tests           InnerInputOutputTest `json:"tests"`
+	ProblemSlug string `json:"problemSlug"`
+	ID          string `json:"id"`          // test id
+	InfoURL     string `json:"infoURL"`     // problem info url
+	ProgramURL  string `json:"programURL"`  // user program url
+	UserProgram string `json:"userProgram"` // user main program file name
+}
+
+type ProblemInfo struct {
+	ProblemSlug string `json:"problemSlug"`
+	ProblemName string `json:"problemName"`
+	Tests       []Test `json:"tests"`
+}
+
+type Test struct {
+	Name      string `json:"name"`
+	Type      string `json:"type"`
+	InputURL  string `json:"inputURL"`
+	OutputURL string `json:"outputURL"`
 }
 
 type InnerInputOutputTest struct {
@@ -48,6 +63,5 @@ type VmInit struct {
 	ProgramType string `json:"programType"`
 	UserProgram string `json:"userProgram"`
 	IsDirectory bool   `json:"isDirectory"`
-	TestType    string `json:"testType"`
 	TestCount   int    `json:"testCount"`
 }

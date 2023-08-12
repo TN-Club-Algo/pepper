@@ -315,7 +315,7 @@ func StartTest(pid int, vmID string, testRequest common.TestRequest) {
 	_, ok := vmAddresses[vmID]
 	fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Starting test for VM", vmID, "at", vmAddresses[vmID])
 	if ok {
-		problemInfo, _ := FetchProblemInfo(testRequest.InfoURL)
+		problemInfo, _ := FetchProblemInfo(WebsiteAddress + testRequest.InfoURL)
 		testCount := len(problemInfo.Tests)
 
 		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Problem info received:", problemInfo)

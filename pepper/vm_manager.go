@@ -160,8 +160,8 @@ func StartVM(codeURL string, request common.TestRequest) {
 	}()
 
 	fcCmd := exec.Command("/root/firecracker-bin", "--api-sock", socket, "--config-file", configFile)
-	pid := fcCmd.Process.Pid
 	err = fcCmd.Start()
+	pid := fcCmd.Process.Pid
 	if err != nil {
 		fmt.Println("[", hostDevName, "]", "Error starting firecracker VM:", err)
 		return

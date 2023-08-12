@@ -34,6 +34,8 @@ var (
 func init() {
 	vmAddresses = make(map[string]string)
 	usedIps = make(map[string]string)
+
+	ActiveVMs = make(map[string]int)
 }
 
 func StartVM(codeURL string, request common.TestRequest) {

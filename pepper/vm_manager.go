@@ -315,11 +315,17 @@ func StartTest(pid int, vmID string, testRequest common.TestRequest) {
 	_, ok := vmAddresses[vmID]
 	fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Starting test for VM", vmID, "at", vmAddresses[vmID])
 	if ok {
+		problemInfo, _ := FetchProblemInfo(testRequest.InfoURL)
+		testCount := len(problemInfo.Tests)
+
+		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Problem info received:", problemInfo)
+
 		// test purpose
 		data := common.VmInit{
 			ProgramType: common.PYTHON,           // should be dynamic
 			UserProgram: testRequest.UserProgram, // should be dynamic
 			IsDirectory: false,                   // should be dynamic
+			TestCount:   testCount,
 		}
 		problemSlug := testRequest.ProblemSlug
 		b, _ := json.Marshal(data)
@@ -353,8 +359,6 @@ func StartTest(pid int, vmID string, testRequest common.TestRequest) {
 		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Init request sent to VM", vmID, "at", vmAddresses[vmID])
 
 		// TODO: Wait for the VM to confirm, if compile has failed, then send test results
-		problemInfo, _ := FetchProblemInfo(testRequest.InfoURL)
-		testCount := len(problemInfo.Tests)
 
 		if err != nil {
 			panic(err)

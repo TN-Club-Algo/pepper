@@ -9,7 +9,17 @@ import (
 )
 
 func FetchProblemInfo(url string) (*common.ProblemInfo, error) {
-	resp, err := http.Get(url)
+	client := &http.Client{}
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// Add the secret to the request header
+	req.Header.Add("x-auth-secret-key", Secret)
+
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -25,7 +35,17 @@ func FetchProblemInfo(url string) (*common.ProblemInfo, error) {
 }
 
 func DownloadAsText(url string) (string, error) {
-	resp, err := http.Get(url)
+	client := &http.Client{}
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return "", err
+	}
+
+	// Add the secret to the request header
+	req.Header.Add("x-auth-secret-key", Secret)
+
+	resp, err := client.Do(req)
 	if err != nil {
 		return "", err
 	}

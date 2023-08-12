@@ -381,8 +381,8 @@ func StartTest(pid int, vmID string, testRequest common.TestRequest) {
 
 // SendInput Returns if the test passed, the response, the time taken and the final memory usage
 func SendInput(pid int, vmID string, testType string, inputURL string, outputURL string) (bool, string, int, int) {
-	input, _ := DownloadAsText(inputURL)
-	output, _ := DownloadAsText(outputURL)
+	input, _ := DownloadAsText(WebsiteAddress + inputURL)
+	output, _ := DownloadAsText(WebsiteAddress + outputURL)
 	var structInput = common.VmInput{ID: vmID, Input: input, Type: testType}
 
 	var b, _ = json.Marshal(structInput)

@@ -282,14 +282,13 @@ func createDisk(name string, codeURL string) error {
 		fmt.Println("[", name, time.Now().Format("15:04:05"), "]", err)
 		return err
 	}
-	cmd = exec.Command("cp", "/root/pepper-vm", "/tmp/"+name+"/pepper-vm")
+	cmd = exec.Command("mount", name+".ext4", "/tmp/"+name)
 	err = cmd.Run()
 	if err != nil {
 		fmt.Println("[", name, time.Now().Format("15:04:05"), "]", err)
 		return err
 	}
-
-	cmd = exec.Command("mount", name+".ext4", "/tmp/"+name)
+	cmd = exec.Command("cp", "/root/pepper-vm", "/tmp/"+name+"/pepper-vm")
 	err = cmd.Run()
 	if err != nil {
 		fmt.Println("[", name, time.Now().Format("15:04:05"), "]", err)

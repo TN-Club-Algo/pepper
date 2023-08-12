@@ -7,7 +7,7 @@ import (
 
 var (
 	MaxRam         = 16384
-	WebsiteAddress = "http://localhost:8080"
+	WebsiteAddress = "https://algo.limpsword.fr"
 	Secret         = "secret"
 )
 

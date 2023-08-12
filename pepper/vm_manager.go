@@ -244,10 +244,10 @@ func StartVM(codeURL string, request common.TestRequest) {
 
 	// Cleanup
 	session, _ = conn.NewSession()
-	session.Run("reboot")
+	/*session.Run("reboot")
 	fcCmd.Process.Kill()
 	exec.Command("rm", "-f", "/root/rootfs"+hostDevName+".ext4").Run()
-	exec.Command("rm", "-f", "/root/"+hostDevName+".ext4").Run()
+	exec.Command("rm", "-f", "/root/"+hostDevName+".ext4").Run()*/
 
 	delete(usedIps, hostDevName)
 	delete(usedIps, tapHost)
@@ -426,6 +426,8 @@ func SendInput(pid int, vmID string, testType string, inputURL string, outputURL
 	start := time.Now().UnixMilli()
 	timeout := 1 * time.Second
 	c.SetReadDeadline(time.Now().Add(timeout))
+
+	// TODO: remove memory used by the VM
 
 	receiveType, rsp, err := c.ReadMessage()
 	if err != nil {

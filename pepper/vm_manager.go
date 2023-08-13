@@ -100,7 +100,7 @@ func StartVM(codeURL string, request common.TestRequest) {
 	fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "Copied rootfs.")
 
 	// Share user's program and test program using initrd
-	err = createDisk(hostDevName, codeURL)
+	err = createDisk(hostDevName, codeURL, request.Extension)
 	if err != nil {
 		return
 	}
@@ -257,7 +257,7 @@ func StartVM(codeURL string, request common.TestRequest) {
 	fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "Stopped firecracker VM.")
 }
 
-func createDisk(name string, codeURL string) error {
+func createDisk(name string, codeURL string, extension string) error {
 	cmd := exec.Command("dd", "if=/dev/zero", "of="+name+".ext4", "bs=1M", "count=20")
 	err := cmd.Run()
 	if err != nil {
@@ -294,12 +294,14 @@ func createDisk(name string, codeURL string) error {
 		fmt.Println("[", name, time.Now().Format("15:04:05"), "]", err)
 		return err
 	}
-	cmd = exec.Command("curl", WebsiteAddress+codeURL, "-O", "-H", "x-auth-secret-key "+Secret, "--output-dir", "/tmp/"+name)
-	err = cmd.Run()
-	if err != nil {
-		fmt.Println("[", name, time.Now().Format("15:04:05"), "]", err)
-		return err
-	}
+	// Download user program
+	DownloadAndSaveFile(WebsiteAddress+codeURL, "/tmp/"+name, extension) /*
+		cmd = exec.Command("curl", WebsiteAddress+codeURL, "-O", "-H", "x-auth-secret-key "+Secret, "--output-dir", "/tmp/"+name)
+		err = cmd.Run()
+		if err != nil {
+			fmt.Println("[", name, time.Now().Format("15:04:05"), "]", err)
+			return err
+		}*/
 	cmd = exec.Command("umount", "/tmp/"+name)
 	err = cmd.Run()
 	if err != nil {
@@ -321,9 +323,9 @@ func StartTest(pid int, vmID string, testRequest common.TestRequest) {
 
 		// test purpose
 		data := common.VmInit{
-			ProgramType: common.PYTHON,           // should be dynamic
-			UserProgram: testRequest.UserProgram, // should be dynamic
-			IsDirectory: false,                   // should be dynamic
+			ProgramType: testRequest.Language,
+			UserProgram: testRequest.UserProgram,
+			IsDirectory: false, // should be dynamic
 			TestCount:   testCount,
 		}
 		problemSlug := testRequest.ProblemSlug

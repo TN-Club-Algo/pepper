@@ -39,6 +39,8 @@ type TestRequest struct {
 	InfoURL     string `json:"infoURL"`     // problem info url
 	ProgramURL  string `json:"programURL"`  // user program url
 	UserProgram string `json:"userProgram"` // user main program file name
+	Language    string `json:"language"`    // user program language
+	Extension   string `json:"extension"`   // user program extension
 }
 
 type ProblemInfo struct {

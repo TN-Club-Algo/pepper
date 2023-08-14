@@ -56,7 +56,8 @@ func listen() {
 	}
 }
 
-func sendInnerTestResult(testId string, testIndex int, problemSlug string, result string, timeElapsed int, memoryUsed int) {
+func sendInnerTestResult(testId string, testIndex int, problemSlug string, result string, timeElapsed int,
+	memoryUsed int, sendFinalResult bool, finalPassed bool) {
 	innerTestOutput := common.InnerTestResult{
 		ID:          testId,
 		Index:       testIndex,
@@ -76,6 +77,10 @@ func sendInnerTestResult(testId string, testIndex int, problemSlug string, resul
 	err = rdb.Publish(ctx, "pepper-inner-test-results", string(bytes)).Err()
 	if err != nil {
 		panic(err)
+	}
+
+	if sendFinalResult {
+		go sendTestResult(testId, problemSlug, finalPassed)
 	}
 }
 

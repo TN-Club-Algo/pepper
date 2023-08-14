@@ -369,15 +369,13 @@ func StartTest(pid int, vmID string, testRequest common.TestRequest) {
 				problemInfo.Tests[i].InputURL, problemInfo.Tests[i].OutputURL)
 			if !passed {
 				fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Test failed for VM", vmID, "at", vmAddresses[vmID])
-				go sendInnerTestResult(testRequest.ID, i, problemSlug, "Wrong answer", timeTaken, finalMemoryUsage)
-				go sendTestResult(testRequest.ID, problemSlug, false)
+				go sendInnerTestResult(testRequest.ID, i, problemSlug, "Wrong answer", timeTaken, finalMemoryUsage, true, false)
 				return
 			} else {
-				go sendInnerTestResult(testRequest.ID, i, problemSlug, "Test passed", timeTaken, finalMemoryUsage)
+				go sendInnerTestResult(testRequest.ID, i, problemSlug, "Test passed", timeTaken, finalMemoryUsage, i == (testCount-1), true)
 			}
 		}
 		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "All tests passed for VM", vmID, "at", vmAddresses[vmID])
-		go sendTestResult(testRequest.ID, problemSlug, true)
 	}
 }
 

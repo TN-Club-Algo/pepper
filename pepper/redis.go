@@ -74,13 +74,13 @@ func sendInnerTestResult(testId string, testIndex int, problemSlug string, resul
 
 	fmt.Println(string(bytes))
 
-	err = rdb.Publish(ctx, "pepper-inner-test-results", string(bytes)).Err()
-	if err != nil {
-		panic(err)
-	}
-
 	if sendFinalResult {
 		go sendTestResult(testId, problemSlug, finalPassed)
+	} else {
+		err = rdb.Publish(ctx, "pepper-inner-test-results", string(bytes)).Err()
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 

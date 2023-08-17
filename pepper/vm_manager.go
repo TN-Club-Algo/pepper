@@ -239,8 +239,10 @@ func StartVM(codeURL string, request common.TestRequest) {
 	fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "Firecracker VM ready!")
 	vmAddresses[hostDevName] = fcAddress
 
+	startRam, _ := common.CalculateMemory(pid)
+
 	// We are ready for tests
-	StartTest(pid, hostDevName, request)
+	StartTest(pid, startRam, hostDevName, request)
 
 	// Cleanup
 	session, _ = conn.NewSession()
@@ -312,7 +314,7 @@ func createDisk(name string, codeURL string, extension string) error {
 	return nil
 }
 
-func StartTest(pid int, vmID string, testRequest common.TestRequest) {
+func StartTest(pid int, startMemory int, vmID string, testRequest common.TestRequest) {
 	_, ok := vmAddresses[vmID]
 	fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Starting test for VM", vmID, "at", vmAddresses[vmID])
 	if ok {
@@ -367,6 +369,8 @@ func StartTest(pid int, vmID string, testRequest common.TestRequest) {
 		for i := 0; i < testCount; i++ {
 			passed, _, timeTaken, finalMemoryUsage := SendInput(pid, vmID, problemInfo.Tests[i].Type,
 				problemInfo.Tests[i].InputURL, problemInfo.Tests[i].OutputURL)
+
+			finalMemoryUsage -= startMemory
 			if !passed {
 				fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Test failed for VM", vmID, "at", vmAddresses[vmID])
 				go sendInnerTestResult(testRequest.ID, i, problemSlug, "Wrong answer", timeTaken, finalMemoryUsage, true, false)

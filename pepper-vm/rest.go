@@ -66,11 +66,12 @@ func compileAndContinue(vmInit common.VmInit) {
 		// javac
 		exec.Command("javac", "$(find /home/container/program -name \"*.java\")")
 	case common.CPP:
+		exec.Command("g++", "/root/"+vmInit.UserProgram, "-o", "/root/program")
 	case common.PYTHON:
 		// No compilation needed
 		//exec.Command("mv", "/root/"+vmInit.UserProgram, "/home/container/program/"+vmInit.UserProgram)
 	case common.C:
-
+		exec.Command("gcc", "/root/"+vmInit.UserProgram, "-o", "/root/program")
 	}
 
 	go startTests(vmInit)

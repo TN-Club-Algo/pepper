@@ -247,10 +247,10 @@ func StartVM(codeURL string, request common.TestRequest) {
 
 	// Cleanup
 	session, _ = conn.NewSession()
-	/*session.Run("reboot")
+	session.Run("reboot")
 	fcCmd.Process.Kill()
 	exec.Command("rm", "-f", "/root/rootfs"+hostDevName+".ext4").Run()
-	exec.Command("rm", "-f", "/root/"+hostDevName+".ext4").Run()*/
+	exec.Command("rm", "-f", "/root/"+hostDevName+".ext4").Run()
 
 	delete(usedIps, hostDevName)
 	delete(usedIps, tapHost)
@@ -413,6 +413,7 @@ func SendInput(pid int, vmID string, testType string, inputURL string, outputURL
 			return
 		}
 	}(response.Body)
+	start := time.Now().UnixMilli()
 
 	fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Input sent to VM", vmID, "at", vmAddresses[vmID])
 	fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Waiting for result from VM", vmID, "at", vmAddresses[vmID])
@@ -431,7 +432,6 @@ func SendInput(pid int, vmID string, testType string, inputURL string, outputURL
 		return false, "Fatal error", -1, -1
 	}
 
-	start := time.Now().UnixMilli()
 	timeout := pbTimeout * 3
 	c.SetReadDeadline(time.Now().Add(timeout))
 

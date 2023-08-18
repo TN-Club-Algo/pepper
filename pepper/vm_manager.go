@@ -453,8 +453,8 @@ func SendInput(pid int, vmID string, testType string, inputURL string, outputURL
 	end := time.Now().UnixMilli()
 
 	// remove the last \n and unuseful spaces
-	rspStr := strings.Trim(string(rsp), "\n")
-	rspStr = strings.Trim(rspStr, " ")
+	rspStr := strings.TrimSpace(string(rsp))
+	output = strings.TrimSpace(rspStr)
 
 	fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Received output:", rspStr, "expected:", output)
 	if rspStr == output {

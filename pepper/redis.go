@@ -75,7 +75,7 @@ func sendInnerTestResult(testId string, testIndex int, problemSlug string, resul
 	fmt.Println(string(bytes))
 
 	if sendFinalResult {
-		go sendTestResult(testId, problemSlug, finalPassed)
+		go sendTestResult(testId, problemSlug, result, finalPassed)
 	} else {
 		err = rdb.Publish(ctx, "pepper-inner-test-results", string(bytes)).Err()
 		if err != nil {
@@ -84,10 +84,11 @@ func sendInnerTestResult(testId string, testIndex int, problemSlug string, resul
 	}
 }
 
-func sendTestResult(testId string, problemSlug string, allPassed bool) {
+func sendTestResult(testId string, problemSlug string, info string, allPassed bool) {
 	testResult := common.TestResult{
 		ID:          testId,
 		ProblemSlug: problemSlug,
+		Info:        info,
 		Result:      strconv.FormatBool(allPassed),
 	}
 

@@ -30,6 +30,7 @@ type InnerTestResult struct {
 type TestResult struct {
 	ID          string `json:"testID"`
 	ProblemSlug string `json:"problemSlug"`
+	Info        string `json:"info"`
 	Result      string `json:"result"`
 }
 

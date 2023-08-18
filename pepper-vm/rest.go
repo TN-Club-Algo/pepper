@@ -127,7 +127,7 @@ func startTests(vmInit common.VmInit) {
 					fmt.Println("Error waiting for the command to exit:", err)
 				}
 
-				fmt.Println("Output is", string(output))
+				//fmt.Println("Output is", string(output))
 
 				// write output to the channel which will send it to the client
 				outputChan <- output

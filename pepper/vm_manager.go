@@ -385,12 +385,14 @@ func StartTest(pid int, startMemory int, vmID string, testRequest common.TestReq
 
 // SendInput Returns if the test passed, the response, the time taken and the final memory usage
 func SendInput(pid int, vmID string, testType string, inputURL string, outputURL string) (bool, string, int, int) {
+	// TODO: add timeout
+	pbTimeout := 1 * time.Second
 	input, _ := DownloadAsText(WebsiteAddress + inputURL)
 	output, _ := DownloadAsText(WebsiteAddress + outputURL)
 	var structInput = common.VmInput{ID: vmID, Input: input, Type: testType}
 
 	var b, _ = json.Marshal(structInput)
-	fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Sending input to VM", vmID, "at", vmAddresses[vmID], "with data", string(b))
+	//fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Sending input to VM", vmID, "at", vmAddresses[vmID], "with data", string(b))
 
 	var request, err = http.NewRequest("PUT", "http://"+vmAddresses[vmID]+":"+strconv.FormatInt(common.RestPort, 10)+common.InputEndpoint, strings.NewReader(string(b)))
 	if err != nil {
@@ -428,25 +430,31 @@ func SendInput(pid int, vmID string, testType string, inputURL string, outputURL
 	}
 
 	start := time.Now().UnixMilli()
-	timeout := 1 * time.Second
+	timeout := pbTimeout * 3
 	c.SetReadDeadline(time.Now().Add(timeout))
 
 	// TODO: remove memory used by the VM
 
 	receiveType, rsp, err := c.ReadMessage()
+	duration := time.Now().UnixMilli() - start
 	if err != nil {
 		// is it a timeout?
 		if err, ok := err.(net.Error); ok && err.Timeout() {
-			log.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Timeout on VM", vmID, "at", vmAddresses[vmID])
+			fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Timeout on VM", vmID, "at", vmAddresses[vmID])
 			memory, _ := common.CalculateMemory(pid)
 			return false, "Timeout", int(timeout.Milliseconds()), memory
 		}
-		log.Println("[", vmID, time.Now().Format("15:04:05"), "]", "ReadMessage failed:", err)
+		if duration > pbTimeout.Milliseconds() {
+			fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Timeout on VM", vmID, "at", vmAddresses[vmID])
+			memory, _ := common.CalculateMemory(pid)
+			return false, "Timeout", int(duration), memory
+		}
+		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "ReadMessage failed:", err)
 		memory, _ := common.CalculateMemory(pid)
 		return false, "Fatal error", int(time.Now().UnixMilli() - start), memory
 	}
 	if receiveType != websocket.TextMessage {
-		log.Printf("received type(%d) != websocket.TextMessage(%d)\n", receiveType, websocket.TextMessage)
+		fmt.Printf("received type(%d) != websocket.TextMessage(%d)\n", receiveType, websocket.TextMessage)
 		memory, _ := common.CalculateMemory(pid)
 		return false, "Fatal error", int(time.Now().UnixMilli() - start), memory
 	}
@@ -456,7 +464,7 @@ func SendInput(pid int, vmID string, testType string, inputURL string, outputURL
 	rspStr := strings.TrimSpace(string(rsp))
 	output = strings.TrimSpace(rspStr)
 
-	fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Received output:", rspStr, "expected:", output)
+	//fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Received output:", rspStr, "expected:", output)
 	if rspStr == output {
 		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Test passed!")
 		memory, _ := common.CalculateMemory(pid)

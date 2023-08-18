@@ -10,7 +10,7 @@ import (
 	"strconv"
 )
 
-var inputDataChan = make(chan common.VmInput)
+var inputDataChan = make(chan string)
 
 func StartREST() {
 	router := gin.Default()
@@ -35,7 +35,7 @@ func receiveInput(c *gin.Context) {
 
 	//fmt.Println("Received input request with data", input)
 
-	inputDataChan <- input
+	inputDataChan <- input.Input
 
 	c.Status(http.StatusOK)
 }
@@ -88,13 +88,14 @@ func startTests(vmInit common.VmInit) {
 		case common.CPP:
 		case common.PYTHON:
 			// python
-			if input.Type == common.TestTypeInputOutput {
+			if true {
+				//if input.Type == common.TestTypeInputOutput {
 				fmt.Println("Test type is input/output for Python")
 
 				cmd := exec.Command("python", vmInit.UserProgram) // let's assume it isn't a folder for now
 				cmd.Dir = "/root"
 				//cmd.Dir = "/home/container/program"
-				inputData := input.Input
+				inputData := input
 
 				fmt.Println("Input data is", inputData)
 

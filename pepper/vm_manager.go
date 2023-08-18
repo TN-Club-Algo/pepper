@@ -455,6 +455,11 @@ func SendInput(pid int, vmID string, testType string, inputURL string, outputURL
 		memory, _ := common.CalculateMemory(pid)
 		return false, "Fatal error", int(duration), memory
 	}
+	if duration > pbTimeout.Milliseconds() {
+		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Time limit exceeded", vmID, "at", vmAddresses[vmID])
+		memory, _ := common.CalculateMemory(pid)
+		return false, "Time limit exceeded", int(duration), memory
+	}
 	if receiveType != websocket.TextMessage {
 		fmt.Printf("received type(%d) != websocket.TextMessage(%d)\n", receiveType, websocket.TextMessage)
 		memory, _ := common.CalculateMemory(pid)

@@ -33,7 +33,7 @@ func receiveInput(c *gin.Context) {
 		return
 	}
 
-	fmt.Println("Received input request with data", input)
+	//fmt.Println("Received input request with data", input)
 
 	inputDataChan <- input
 
@@ -130,7 +130,6 @@ func startTests(vmInit common.VmInit) {
 				//fmt.Println("Output is", string(output))
 
 				// write output to the channel which will send it to the client
-				go exec.Command("echo", string(output), ">>", "/home/container/output.txt").Run()
 				outputChan <- output
 			}
 		case common.C:

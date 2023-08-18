@@ -42,6 +42,7 @@ type TestRequest struct {
 	UserProgram string `json:"userProgram"` // user main program file name
 	Language    string `json:"language"`    // user program language
 	Extension   string `json:"extension"`   // user program extension
+	TimeLimit   int    `json:"timeLimit"`   // time limit s
 }
 
 type ProblemInfo struct {

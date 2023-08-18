@@ -369,7 +369,7 @@ func StartTest(pid int, startMemory int, vmID string, testRequest common.TestReq
 		}
 		for i := 0; i < testCount; i++ {
 			passed, testResponse, timeTaken, finalMemoryUsage := SendInput(pid, vmID, problemInfo.Tests[i].Type,
-				problemInfo.Tests[i].InputURL, problemInfo.Tests[i].OutputURL)
+				problemInfo.Tests[i].InputURL, problemInfo.Tests[i].OutputURL, testRequest.TimeLimit)
 
 			finalMemoryUsage -= startMemory
 			if !passed {
@@ -385,9 +385,8 @@ func StartTest(pid int, startMemory int, vmID string, testRequest common.TestReq
 }
 
 // SendInput Returns if the test passed, the response, the time taken and the final memory usage
-func SendInput(pid int, vmID string, testType string, inputURL string, outputURL string) (bool, string, int, int) {
-	// TODO: add timeout
-	pbTimeout := 1 * time.Second
+func SendInput(pid int, vmID string, testType string, inputURL string, outputURL string, timeLimit int) (bool, string, int, int) {
+	pbTimeout := time.Duration(timeLimit) * time.Second
 	input, _ := DownloadAsText(WebsiteAddress + inputURL)
 	output, _ := DownloadAsText(WebsiteAddress + outputURL)
 	var structInput = common.VmInput{ID: vmID, Input: input, Type: testType}

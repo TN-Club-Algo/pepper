@@ -130,9 +130,8 @@ func startTests(vmInit common.VmInit) {
 				//fmt.Println("Output is", string(output))
 
 				// write output to the channel which will send it to the client
+				go exec.Command("echo", string(output), ">>", "/home/container/output.txt").Run()
 				outputChan <- output
-				//exec.Command("touch", "/home/container/output.txt").Run()
-				//exec.Command("echo", string(output), ">>", "/home/container/output.txt").Run()
 			}
 		case common.C:
 		}

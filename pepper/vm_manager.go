@@ -451,14 +451,13 @@ func SendInput(pid int, vmID string, testType string, inputURL string, outputURL
 		}
 		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "ReadMessage failed:", err)
 		memory, _ := common.CalculateMemory(pid)
-		return false, "Fatal error", int(time.Now().UnixMilli() - start), memory
+		return false, "Fatal error", int(duration), memory
 	}
 	if receiveType != websocket.TextMessage {
 		fmt.Printf("received type(%d) != websocket.TextMessage(%d)\n", receiveType, websocket.TextMessage)
 		memory, _ := common.CalculateMemory(pid)
-		return false, "Fatal error", int(time.Now().UnixMilli() - start), memory
+		return false, "Fatal error", int(duration), memory
 	}
-	end := time.Now().UnixMilli()
 
 	// remove the last \n and unuseful spaces
 	rspStr := strings.TrimSpace(string(rsp))
@@ -468,10 +467,10 @@ func SendInput(pid int, vmID string, testType string, inputURL string, outputURL
 	if rspStr == output {
 		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Test passed!")
 		memory, _ := common.CalculateMemory(pid)
-		return true, "", int(end - start), memory
+		return true, "", int(duration), memory
 	} else {
 		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Test failed!")
 		memory, _ := common.CalculateMemory(pid)
-		return false, "Wrong answer", int(end - start), memory
+		return false, "Wrong answer", int(duration), memory
 	}
 }

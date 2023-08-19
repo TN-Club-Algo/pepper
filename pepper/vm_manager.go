@@ -373,7 +373,7 @@ func StartTest(pid int, startMemory int, vmID string, testRequest common.TestReq
 		// TODO: Wait for the VM to confirm, if compile has failed, then send test results
 
 		for i := 0; i < testCount; i++ {
-			passed, testResponse, timeTaken, finalMemoryUsage := SendInput(pid, vmID, problemInfo.Tests[i].Type,
+			passed, testResponse, timeTaken, finalMemoryUsage := SendInput(i, pid, vmID, problemInfo.Tests[i].Type,
 				problemInfo.Tests[i].InputURL, problemInfo.Tests[i].OutputURL, testRequest.TimeLimit)
 
 			finalMemoryUsage -= startMemory
@@ -390,7 +390,7 @@ func StartTest(pid int, startMemory int, vmID string, testRequest common.TestReq
 }
 
 // SendInput Returns if the test passed, the response, the time taken and the final memory usage
-func SendInput(pid int, vmID string, testType string, inputURL string, outputURL string, timeLimit int) (bool, string, int, int) {
+func SendInput(pid int, p int, vmID string, testType string, inputURL string, outputURL string, timeLimit int) (bool, string, int, int) {
 	pbTimeout := time.Duration(timeLimit) * time.Second
 	input, _ := DownloadAsText(WebsiteAddress + inputURL)
 	output, _ := DownloadAsText(WebsiteAddress + outputURL)
@@ -487,6 +487,6 @@ func SendInput(pid int, vmID string, testType string, inputURL string, outputURL
 
 		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Test failed!")
 		memory, _ := common.CalculateMemory(pid)
-		return false, "Wrong answer", int(duration), memory
+		return false, "Wrong answer on test " + strconv.Itoa(p), int(duration), memory
 	}
 }

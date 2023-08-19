@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os/exec"
 	"strconv"
+	"strings"
 )
 
 var inputDataChan = make(chan string)
@@ -64,14 +65,14 @@ func compileAndContinue(vmInit common.VmInit) {
 	switch vmInit.ProgramType {
 	case common.JAVA:
 		// javac
-		exec.Command("javac", "$(find /home/container/program -name \"*.java\")")
+		exec.Command("javac", "$(find /root/"+vmInit.UserProgram+" -name \"*.java\")", "-d", "/root/"+strings.Split(vmInit.UserProgram, ".")[0])
 	case common.CPP:
-		exec.Command("g++", "/root/"+vmInit.UserProgram, "-o", "/root/program")
+		exec.Command("g++", "/root/"+vmInit.UserProgram, "-o", "/root/"+strings.Split(vmInit.UserProgram, ".")[0])
 	case common.PYTHON:
 		// No compilation needed
 		//exec.Command("mv", "/root/"+vmInit.UserProgram, "/home/container/program/"+vmInit.UserProgram)
 	case common.C:
-		exec.Command("gcc", "/root/"+vmInit.UserProgram, "-o", "/root/program")
+		exec.Command("gcc", "/root/"+vmInit.UserProgram, "-o", "/root/"+strings.Split(vmInit.UserProgram, ".")[0])
 	}
 
 	go startTests(vmInit)
@@ -84,8 +85,99 @@ func startTests(vmInit common.VmInit) {
 		// Run test
 		switch vmInit.ProgramType {
 		case common.JAVA:
+			// java
+			if true {
+				//if input.Type == common.TestTypeInputOutput {
+				fmt.Println("Test type is input/output for Java")
 
+				cmd := exec.Command("java", "-jar", vmInit.UserProgram)
+				cmd.Dir = "/root"
+				//cmd.Dir = "/home/container/program"
+				inputData := input
+
+				fmt.Println("Input data is", inputData)
+
+				stdin, err := cmd.StdinPipe()
+				if err != nil {
+					fmt.Println("Error getting stdin pipe:", err)
+				}
+				pipe, err := cmd.StdoutPipe()
+				if err != nil {
+					fmt.Println("Error getting stdout pipe:", err)
+				}
+				err = cmd.Start()
+				if err != nil {
+					fmt.Println("Error starting command:", err)
+				}
+				_, err = stdin.Write([]byte(inputData))
+				if err != nil {
+					fmt.Println("Error writing data to stdin:", err)
+				}
+				err = stdin.Close()
+				if err != nil {
+					fmt.Println("Error closing stdin pipe:", err)
+				}
+				output, err := io.ReadAll(pipe)
+				if err != nil {
+					fmt.Println("Error reading stdout pipe:", err)
+				}
+				err = cmd.Wait()
+				if err != nil {
+					fmt.Println("Error waiting for the command to exit:", err)
+				}
+
+				//fmt.Println("Output is", string(output))
+
+				// write output to the channel which will send it to the client
+				outputChan <- output
+			}
 		case common.CPP:
+			// cpp
+			if true {
+				//if input.Type == common.TestTypeInputOutput {
+				fmt.Println("Test type is input/output for C++")
+
+				cmd := exec.Command("/root/" + strings.Split(vmInit.UserProgram, ".")[0])
+				cmd.Dir = "/root"
+				//cmd.Dir = "/home/container/program"
+				inputData := input
+
+				fmt.Println("Input data is", inputData)
+
+				stdin, err := cmd.StdinPipe()
+				if err != nil {
+					fmt.Println("Error getting stdin pipe:", err)
+				}
+				pipe, err := cmd.StdoutPipe()
+				if err != nil {
+					fmt.Println("Error getting stdout pipe:", err)
+				}
+				err = cmd.Start()
+				if err != nil {
+					fmt.Println("Error starting command:", err)
+				}
+				_, err = stdin.Write([]byte(inputData))
+				if err != nil {
+					fmt.Println("Error writing data to stdin:", err)
+				}
+				err = stdin.Close()
+				if err != nil {
+					fmt.Println("Error closing stdin pipe:", err)
+				}
+				output, err := io.ReadAll(pipe)
+				if err != nil {
+					fmt.Println("Error reading stdout pipe:", err)
+				}
+				err = cmd.Wait()
+				if err != nil {
+					fmt.Println("Error waiting for the command to exit:", err)
+				}
+
+				//fmt.Println("Output is", string(output))
+
+				// write output to the channel which will send it to the client
+				outputChan <- output
+			}
 		case common.PYTHON:
 			// python
 			if true {
@@ -134,6 +226,52 @@ func startTests(vmInit common.VmInit) {
 				outputChan <- output
 			}
 		case common.C:
+			// c
+			if true {
+				//if input.Type == common.TestTypeInputOutput {
+				fmt.Println("Test type is input/output for C")
+
+				cmd := exec.Command("/root/" + strings.Split(vmInit.UserProgram, ".")[0])
+				cmd.Dir = "/root"
+				//cmd.Dir = "/home/container/program"
+				inputData := input
+
+				fmt.Println("Input data is", inputData)
+
+				stdin, err := cmd.StdinPipe()
+				if err != nil {
+					fmt.Println("Error getting stdin pipe:", err)
+				}
+				pipe, err := cmd.StdoutPipe()
+				if err != nil {
+					fmt.Println("Error getting stdout pipe:", err)
+				}
+				err = cmd.Start()
+				if err != nil {
+					fmt.Println("Error starting command:", err)
+				}
+				_, err = stdin.Write([]byte(inputData))
+				if err != nil {
+					fmt.Println("Error writing data to stdin:", err)
+				}
+				err = stdin.Close()
+				if err != nil {
+					fmt.Println("Error closing stdin pipe:", err)
+				}
+				output, err := io.ReadAll(pipe)
+				if err != nil {
+					fmt.Println("Error reading stdout pipe:", err)
+				}
+				err = cmd.Wait()
+				if err != nil {
+					fmt.Println("Error waiting for the command to exit:", err)
+				}
+
+				//fmt.Println("Output is", string(output))
+
+				// write output to the channel which will send it to the client
+				outputChan <- output
+			}
 		}
 	}
 }

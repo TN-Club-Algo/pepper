@@ -45,7 +45,7 @@ func onWebsocket(w http.ResponseWriter, r *http.Request) {
 	upgrader := newUpgrader()
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		panic(err)
+		return
 	}
 	conn.SetReadDeadline(time.Time{})
 	fmt.Println("OnOpen:", conn.RemoteAddr().String())

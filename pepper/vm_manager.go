@@ -231,7 +231,7 @@ func StartVM(codeURL string, request common.TestRequest) {
 	fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "Running commands...")
 
 	if err := session.Start(command); err != nil {
-		panic("Failed to run command: " + command + "\nBecause: " + err.Error())
+		fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "Error running commands:", err.Error())
 	}
 
 	session.Close()
@@ -342,16 +342,18 @@ func StartTest(pid int, startMemory int, vmID string, testRequest common.TestReq
 
 		var request, err = http.NewRequest("PUT", "http://"+vmAddresses[vmID]+":"+strconv.FormatInt(common.RestPort, 10)+common.InitEndPoint, strings.NewReader(string(b)))
 		if err != nil {
-			panic(err)
+			go sendTestResult(testRequest.ID, testRequest.ProblemSlug, "Compilation error", false)
+			return
 		}
 
 		request.Header.Set("Content-Type", "application/json; charset=UTF-8")
 		client := &http.Client{
-			Timeout: 2 * time.Second,
+			Timeout: 5 * time.Second,
 		}
 		response, err := client.Do(request)
 		if err != nil {
-			panic(err)
+			go sendTestResult(testRequest.ID, testRequest.ProblemSlug, "Compilation error", false)
+			return
 		}
 		defer client.CloseIdleConnections()
 		defer func(Body io.ReadCloser) {
@@ -366,7 +368,8 @@ func StartTest(pid int, startMemory int, vmID string, testRequest common.TestReq
 		// TODO: Wait for the VM to confirm, if compile has failed, then send test results
 
 		if err != nil {
-			panic(err)
+			go sendTestResult(testRequest.ID, testRequest.ProblemSlug, "Compilation error", false)
+			return
 		}
 		for i := 0; i < testCount; i++ {
 			passed, testResponse, timeTaken, finalMemoryUsage := SendInput(pid, vmID, problemInfo.Tests[i].Type,
@@ -398,14 +401,14 @@ func SendInput(pid int, vmID string, testType string, inputURL string, outputURL
 	fmt.Println(string(b))
 	var request, err = http.NewRequest("PUT", "http://"+vmAddresses[vmID]+":"+strconv.FormatInt(common.RestPort, 10)+common.InputEndpoint, strings.NewReader(string(b)))
 	if err != nil {
-		panic(err)
+		return false, "Error sending input", 0, 0
 	}
 
 	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	client := &http.Client{}
 	response, err := client.Do(request)
 	if err != nil {
-		panic(err)
+		return false, "Error sending input", 0, 0
 	}
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()

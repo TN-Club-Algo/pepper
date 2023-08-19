@@ -33,26 +33,23 @@ func listen() {
 
 	for {
 		msg, err := pubsub.ReceiveMessage(ctx)
-		if err != nil {
-			panic(err)
+		if err == nil {
+			fmt.Println("Received test raw:", msg.Payload)
+
+			test := common.TestRequest{}
+			err = json.Unmarshal([]byte(msg.Payload), &test)
+
+			if err == nil {
+				if common.SumMapValues(ActiveVMs) > MaxRam || memory.FreeMemory() < 4096 {
+					fmt.Println("Not enough RAM to start VM, waiting...")
+					TestQueue <- test
+					continue
+				}
+
+				// Create VM
+				go StartVM(test.ProgramURL, test)
+			}
 		}
-
-		fmt.Println("Received test raw:", msg.Payload)
-
-		test := common.TestRequest{}
-		err = json.Unmarshal([]byte(msg.Payload), &test)
-		if err != nil {
-			panic(err)
-		}
-
-		if common.SumMapValues(ActiveVMs) > MaxRam || memory.FreeMemory() < 4096 {
-			fmt.Println("Not enough RAM to start VM, waiting...")
-			TestQueue <- test
-			continue
-		}
-
-		// Create VM
-		go StartVM(test.ProgramURL, test)
 	}
 }
 
@@ -69,7 +66,7 @@ func sendInnerTestResult(testId string, testIndex int, problemSlug string, resul
 
 	bytes, err := json.Marshal(innerTestOutput)
 	if err != nil {
-		panic(err)
+		return
 	}
 
 	fmt.Println(string(bytes))
@@ -79,7 +76,8 @@ func sendInnerTestResult(testId string, testIndex int, problemSlug string, resul
 	} else {
 		err = rdb.Publish(ctx, "pepper-inner-test-results", string(bytes)).Err()
 		if err != nil {
-			panic(err)
+			fmt.Println(err)
+			return
 		}
 	}
 }
@@ -94,13 +92,14 @@ func sendTestResult(testId string, problemSlug string, info string, allPassed bo
 
 	bytes, err := json.Marshal(testResult)
 	if err != nil {
-		panic(err)
+		return
 	}
 
 	fmt.Println(string(bytes))
 
 	err = rdb.Publish(ctx, "pepper-test-results", string(bytes)).Err()
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		return
 	}
 }

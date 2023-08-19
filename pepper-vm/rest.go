@@ -66,14 +66,14 @@ func compileAndContinue(vmInit common.VmInit) {
 	case common.JAVA:
 		// javac
 		// FIXME: execute with java -cp and specify a default main class or overwrite it
-		exec.Command("javac", "$(find /root/"+vmInit.UserProgram+" -name \"*.java\")", "-d", "/root/"+strings.Split(vmInit.UserProgram, ".")[0])
+		exec.Command("javac", "$(find /root/"+vmInit.UserProgram+" -name \"*.java\")", "-d", "/root/"+strings.Split(vmInit.UserProgram, ".")[0]).Run()
 	case common.CPP:
-		exec.Command("g++", "/root/"+vmInit.UserProgram, "-o", "/root/"+strings.Split(vmInit.UserProgram, ".")[0])
+		exec.Command("g++", "/root/"+vmInit.UserProgram, "-o", "/root/"+strings.Split(vmInit.UserProgram, ".")[0]).Run()
 	case common.PYTHON:
 		// No compilation needed
 		//exec.Command("mv", "/root/"+vmInit.UserProgram, "/home/container/program/"+vmInit.UserProgram)
 	case common.C:
-		exec.Command("gcc", "/root/"+vmInit.UserProgram, "-o", "/root/"+strings.Split(vmInit.UserProgram, ".")[0])
+		exec.Command("gcc", "/root/"+vmInit.UserProgram, "-o", "/root/"+strings.Split(vmInit.UserProgram, ".")[0]).Run()
 	}
 
 	go startTests(vmInit)

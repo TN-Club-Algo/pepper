@@ -154,6 +154,8 @@ func startTests(vmInit common.VmInit) {
 
 				// write output to the channel which will send it to the client
 				outputChan <- output
+
+				cmd.Process.Kill()
 			}
 		case common.CPP:
 			// cpp
@@ -201,6 +203,8 @@ func startTests(vmInit common.VmInit) {
 
 				// write output to the channel which will send it to the client
 				outputChan <- output
+
+				cmd.Process.Kill()
 			}
 		case common.PYTHON:
 			// python
@@ -250,6 +254,8 @@ func startTests(vmInit common.VmInit) {
 
 				// write output to the channel which will send it to the client
 				outputChan <- output
+
+				cmd.Process.Kill()
 			}
 		case common.C:
 			// c
@@ -297,6 +303,8 @@ func startTests(vmInit common.VmInit) {
 
 				// write output to the channel which will send it to the client
 				outputChan <- output
+
+				cmd.Process.Kill()
 			}
 		case common.GOLANG:
 			// golang
@@ -344,6 +352,8 @@ func startTests(vmInit common.VmInit) {
 
 				// write output to the channel which will send it to the client
 				outputChan <- output
+
+				cmd.Process.Kill()
 			}
 		}
 	}

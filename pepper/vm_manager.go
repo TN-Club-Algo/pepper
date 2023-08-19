@@ -248,10 +248,10 @@ func StartVM(codeURL string, request common.TestRequest) {
 
 	// Cleanup
 	session, _ = conn.NewSession()
-	/*session.Run("reboot")
+	session.Run("reboot")
 	fcCmd.Process.Kill()
 	exec.Command("rm", "-f", "/root/rootfs"+hostDevName+".ext4").Run()
-	exec.Command("rm", "-f", "/root/"+hostDevName+".ext4").Run()*/
+	exec.Command("rm", "-f", "/root/"+hostDevName+".ext4").Run()
 
 	delete(usedIps, hostDevName)
 	delete(usedIps, tapHost)
@@ -357,7 +357,7 @@ func StartTest(pid int, startMemory int, vmID string, testRequest common.TestReq
 		}
 		response, err := client.Do(request)
 		if err != nil {
-			go sendTestResult(testRequest.ID, testRequest.ProblemSlug, "Compilation error", false)
+			go sendTestResult(testRequest.ID, testRequest.ProblemSlug, "Compilation or VM error", false)
 			return
 		}
 		defer client.CloseIdleConnections()

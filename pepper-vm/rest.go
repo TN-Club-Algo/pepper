@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 var inputDataChan = make(chan string)
@@ -229,31 +230,42 @@ func startTests(vmInit common.VmInit) {
 				if err != nil {
 					fmt.Println("Error getting stdout pipe:", err)
 				}
+
+				var wg sync.WaitGroup
+				wg.Add(1) // To wait for the input writing goroutine
+
+				go func() {
+					defer wg.Done()
+					_, err := stdin.Write(bytes)
+					if err != nil {
+						fmt.Println("Error writing data to stdin:", err)
+					}
+					err = stdin.Close()
+					if err != nil {
+						fmt.Println("Error closing stdin pipe:", err)
+					}
+				}()
+
 				err = cmd.Start()
 				if err != nil {
 					fmt.Println("Error starting command:", err)
 				}
-				_, err = stdin.Write(bytes)
-				if err != nil {
-					fmt.Println("Error writing data to stdin:", err)
-				}
-				err = stdin.Close()
-				if err != nil {
-					fmt.Println("Error closing stdin pipe:", err)
-				}
-				output, err := io.ReadAll(pipe)
-				if err != nil {
-					fmt.Println("Error reading stdout pipe:", err)
-				}
+
+				go func() {
+					defer wg.Done()
+					output, err := io.ReadAll(pipe)
+					if err != nil {
+						fmt.Println("Error reading stdout pipe:", err)
+					}
+					outputChan <- output
+				}()
+
+				wg.Wait() // Wait for both input and output handling goroutines
+
 				err = cmd.Wait()
 				if err != nil {
 					fmt.Println("Error waiting for the command to exit:", err)
 				}
-
-				//fmt.Println("Output is", string(output))
-
-				// write output to the channel which will send it to the client
-				outputChan <- output
 
 				cmd.Process.Kill()
 			}

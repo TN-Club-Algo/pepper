@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"strings"
 )
 
 const (
@@ -59,4 +60,8 @@ func CalculateMemory(pid int) (int, error) {
 	}
 
 	return int(res), nil
+}
+
+func NormalizeLineEndings(s string) string {
+	return strings.ReplaceAll(strings.ReplaceAll(s, "\r\n", "\n"), "\r", "\n")
 }

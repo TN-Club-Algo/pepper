@@ -475,7 +475,7 @@ func SendInput(pid int, vmID string, testType string, inputURL string, outputURL
 	outputFix := strings.TrimSpace(output)
 
 	//fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Received output:", rspStr, "expected:", output)
-	if rspStr == outputFix || string(rsp) == output {
+	if rspStr == outputFix || string(rsp) == output || common.NormalizeLineEndings(rspStr) == common.NormalizeLineEndings(outputFix) {
 		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Test passed!")
 		memory, _ := common.CalculateMemory(pid)
 		return true, "", int(duration), memory

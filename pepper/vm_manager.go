@@ -347,8 +347,12 @@ func StartTest(pid int, startMemory int, vmID string, testRequest common.TestReq
 		}
 
 		request.Header.Set("Content-Type", "application/json; charset=UTF-8")
+		secondTimeout := 3 * time.Second
+		if testRequest.Language == common.GOLANG {
+			secondTimeout = 10 * time.Second
+		}
 		client := &http.Client{
-			Timeout: 5 * time.Second,
+			Timeout: secondTimeout,
 		}
 		response, err := client.Do(request)
 		if err != nil {

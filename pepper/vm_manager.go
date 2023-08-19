@@ -342,7 +342,8 @@ func StartTest(pid int, startMemory int, vmID string, testRequest common.TestReq
 
 		var request, err = http.NewRequest("PUT", "http://"+vmAddresses[vmID]+":"+strconv.FormatInt(common.RestPort, 10)+common.InitEndPoint, strings.NewReader(string(b)))
 		if err != nil {
-			go sendTestResult(testRequest.ID, testRequest.ProblemSlug, "Compilation error", false)
+			fmt.Println(err)
+			go sendTestResult(testRequest.ID, testRequest.ProblemSlug, "Test not reachable", false)
 			return
 		}
 
@@ -371,10 +372,6 @@ func StartTest(pid int, startMemory int, vmID string, testRequest common.TestReq
 
 		// TODO: Wait for the VM to confirm, if compile has failed, then send test results
 
-		if err != nil {
-			go sendTestResult(testRequest.ID, testRequest.ProblemSlug, "Compilation error", false)
-			return
-		}
 		for i := 0; i < testCount; i++ {
 			passed, testResponse, timeTaken, finalMemoryUsage := SendInput(pid, vmID, problemInfo.Tests[i].Type,
 				problemInfo.Tests[i].InputURL, problemInfo.Tests[i].OutputURL, testRequest.TimeLimit)
@@ -475,16 +472,19 @@ func SendInput(pid int, vmID string, testType string, inputURL string, outputURL
 
 	// remove the last \n and unuseful spaces
 	rspStr := strings.TrimSpace(string(rsp))
-	output = strings.TrimSpace(output)
-
-	fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Received output:", rspStr, "expected:", output)
+	outputFix := strings.TrimSpace(output)
 
 	//fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Received output:", rspStr, "expected:", output)
-	if rsp != nil && rspStr == output {
+	if rspStr == outputFix || string(rsp) == output {
 		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Test passed!")
 		memory, _ := common.CalculateMemory(pid)
 		return true, "", int(duration), memory
 	} else {
+		// write the output to a file
+		os.WriteFile("output.txt", []byte(rspStr), 0644)
+		// expected
+		os.WriteFile("expected.txt", []byte(outputFix), 0644)
+
 		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Test failed!")
 		memory, _ := common.CalculateMemory(pid)
 		return false, "Wrong answer", int(duration), memory

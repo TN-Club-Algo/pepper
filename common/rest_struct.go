@@ -6,6 +6,7 @@ const (
 	PYTHON string = "python"
 	C      string = "c"
 	KOTLIN string = "kotlin"
+	GOLANG string = "golang"
 )
 
 const (

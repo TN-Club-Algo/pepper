@@ -222,6 +222,7 @@ func StartVM(codeURL string, request common.TestRequest) {
 		"chgrp -R container /home/container 2>/dev/null",
 		"chmod -R 500 /home/container 2>/dev/null",
 		"mkdir /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2", // fix for pepper-vm binary execution
+		"mkdir /tmp", // fix for golang binary compilation
 		"rm -f /root/pepper.out",
 		"nohup /root/pepper-vm > /root/pepper.out 2>&1 &",
 	}

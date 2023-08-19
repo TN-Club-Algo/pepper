@@ -119,7 +119,7 @@ func startTests(vmInit common.VmInit) {
 				//cmd.Dir = "/home/container/program"
 				inputData := input
 
-				fmt.Println("Input data is", inputData)
+				//fmt.Println("Input data is", inputData)
 
 				stdin, err := cmd.StdinPipe()
 				if err != nil {
@@ -166,7 +166,7 @@ func startTests(vmInit common.VmInit) {
 				//cmd.Dir = "/home/container/program"
 				inputData := input
 
-				fmt.Println("Input data is", inputData)
+				//fmt.Println("Input data is", inputData)
 
 				stdin, err := cmd.StdinPipe()
 				if err != nil {
@@ -213,7 +213,7 @@ func startTests(vmInit common.VmInit) {
 				//cmd.Dir = "/home/container/program"
 				inputData := input
 
-				fmt.Println("Input data is", inputData)
+				//fmt.Println("Input data is", inputData)
 
 				stdin, err := cmd.StdinPipe()
 				if err != nil {
@@ -260,7 +260,7 @@ func startTests(vmInit common.VmInit) {
 				//cmd.Dir = "/home/container/program"
 				inputData := input
 
-				fmt.Println("Input data is", inputData)
+				//fmt.Println("Input data is", inputData)
 
 				stdin, err := cmd.StdinPipe()
 				if err != nil {
@@ -307,7 +307,7 @@ func startTests(vmInit common.VmInit) {
 				//cmd.Dir = "/home/container/program"
 				inputData := input
 
-				fmt.Println("Input data is", inputData)
+				//fmt.Println("Input data is", inputData)
 
 				stdin, err := cmd.StdinPipe()
 				if err != nil {

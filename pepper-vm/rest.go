@@ -65,6 +65,7 @@ func compileAndContinue(vmInit common.VmInit) {
 	switch vmInit.ProgramType {
 	case common.JAVA:
 		// javac
+		// FIXME: execute with java -cp and specify a default main class or overwrite it
 		exec.Command("javac", "$(find /root/"+vmInit.UserProgram+" -name \"*.java\")", "-d", "/root/"+strings.Split(vmInit.UserProgram, ".")[0])
 	case common.CPP:
 		exec.Command("g++", "/root/"+vmInit.UserProgram, "-o", "/root/"+strings.Split(vmInit.UserProgram, ".")[0])

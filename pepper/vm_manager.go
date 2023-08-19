@@ -467,10 +467,12 @@ func SendInput(pid int, vmID string, testType string, inputURL string, outputURL
 
 	// remove the last \n and unuseful spaces
 	rspStr := strings.TrimSpace(string(rsp))
-	output = strings.TrimSpace(rspStr)
+	output = strings.TrimSpace(output)
+
+	fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Received output:", rspStr, "expected:", output)
 
 	//fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Received output:", rspStr, "expected:", output)
-	if rspStr == output {
+	if rsp != nil && rspStr == output {
 		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Test passed!")
 		memory, _ := common.CalculateMemory(pid)
 		return true, "", int(duration), memory

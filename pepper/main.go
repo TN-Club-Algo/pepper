@@ -10,11 +10,13 @@ import (
 var (
 	WebsiteAddress = common.GetEnv("WEBSITE_URL", "https://algo.limpsword.fr")
 	Secret         = common.GetEnv("API_SECRET", "api_secret")
-	MaxRam, _      = strconv.Atoi(common.GetEnv("MAX_RAM", "16384"))
+	RedisAddress   = common.GetEnv("REDIS_ADDRESS_PORT", "127.0.0.1:6379")
+	RedisPassword  = common.GetEnv("REDIS_PASS", "")
 )
 
 func main() {
-	Connect("127.0.0.1:6379", "")
+	fmt.Println("Initializing Pepper...")
+	Connect(RedisAddress, RedisPassword)
 
 	// Tick
 	go tick()

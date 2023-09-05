@@ -1,14 +1,16 @@
 package main
 
 import (
+	"AlgoTN/common"
 	"fmt"
 	"os"
+	"strconv"
 )
 
 var (
-	MaxRam         = 16384
-	WebsiteAddress = "https://algo.limpsword.fr"
-	Secret         = "secret"
+	WebsiteAddress = common.GetEnv("WEBSITE_URL", "https://algo.limpsword.fr")
+	Secret         = common.GetEnv("API_SECRET", "api_secret")
+	MaxRam, _      = strconv.Atoi(common.GetEnv("MAX_RAM", "16384"))
 )
 
 func main() {

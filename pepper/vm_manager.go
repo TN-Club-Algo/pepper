@@ -399,7 +399,6 @@ func SendInput(pid int, p int, vmID string, testType string, inputURL string, ou
 	var b, _ = json.Marshal(structInput)
 	//fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Sending input to VM", vmID, "at", vmAddresses[vmID], "with data", string(b))
 
-	fmt.Println(string(b))
 	var request, err = http.NewRequest("PUT", "http://"+vmAddresses[vmID]+":"+strconv.FormatInt(common.RestPort, 10)+common.InputEndpoint, strings.NewReader(string(b)))
 	if err != nil {
 		return false, "Error sending input", 0, 0

@@ -8,6 +8,7 @@ import (
 )
 
 var (
+	MaxRam, _      = strconv.Atoi(common.GetEnv("MAX_RAM", "16384"))
 	WebsiteAddress = common.GetEnv("WEBSITE_URL", "https://algo.limpsword.fr")
 	Secret         = common.GetEnv("API_SECRET", "api_secret")
 	RedisAddress   = common.GetEnv("REDIS_ADDRESS_PORT", "127.0.0.1:6379")

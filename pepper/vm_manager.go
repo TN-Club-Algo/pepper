@@ -64,7 +64,7 @@ func StartVM(codeURL string, request common.TestRequest) {
 	nextHost2 := strings.ReplaceAll(nextIp2, ".", "")
 	usedIps[nextHost2] = nextIp2
 
-	fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "Found fcAddress:", fcAddress)
+	log.Println("[", request.ID, "]", "Found fcAddress:", fcAddress)
 
 	// Edit config
 	b, err := os.ReadFile("/root/vm_config.json")
@@ -72,7 +72,7 @@ func StartVM(codeURL string, request common.TestRequest) {
 		return
 	}
 
-	fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "Determined hostname:", hostDevName)
+	log.Println("[", request.ID, "]", "Determined hostname:", hostDevName)
 
 	kernelBootArgs := "ro console=ttyS0 reboot=k panic=1 pci=off"
 	kernelBootArgs += " ip=" + fcAddress + "::" + tapAddress + ":" + maskLong + "::eth0:off"
@@ -88,7 +88,7 @@ func StartVM(codeURL string, request common.TestRequest) {
 
 	//defer os.Remove("/root/" + hostDevName + ".ext4")
 
-	fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "Temp config adjusted.")
+	log.Println("[", request.ID, "]", "Temp config edited.")
 
 	// Copy rootfs
 	exec.Command("rm", "-f", "/root/rootfs"+hostDevName+".ext4")
@@ -97,7 +97,7 @@ func StartVM(codeURL string, request common.TestRequest) {
 		return
 	}
 
-	fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "Copied rootfs.")
+	log.Println("[", request.ID, "]", "Copied rootfs.")
 
 	// Share user's program and test program using initrd
 	err = createDisk(hostDevName, codeURL, request.Extension)
@@ -106,7 +106,7 @@ func StartVM(codeURL string, request common.TestRequest) {
 	}
 	//exec.Command("cd root/" + folder + " ; find . -print0 | cpio --null --create --verbose --format=newc > " + hostDevName + ".cpio")
 
-	fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "Temp disk created with user program and pepper-vm.")
+	log.Println("[", request.ID, "]", "Temp disk created with user program and pepper-vm.")
 
 	// Create firecracker VM config
 	configFile := "temp_vm_config_" + hostDevName + ".json"
@@ -116,14 +116,14 @@ func StartVM(codeURL string, request common.TestRequest) {
 		return
 	}
 
-	fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "Starting Firecracker VM...")
+	log.Println("[", request.ID, "]", "Temp config created.")
 
 	// Start firecracker VM
 	socket := "/tmp/firecracker" + hostDevName + ".socket"
 	// Remove socket if it exists
 	err = exec.Command("rm", "-f", socket).Run()
 	if err != nil {
-		fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "Error removing socket:", err)
+		log.Println("[", request.ID, "]", "Error removing socket:", err)
 		return
 	}
 
@@ -131,19 +131,19 @@ func StartVM(codeURL string, request common.TestRequest) {
 	exec.Command("ip", "link", "del", hostDevName).Run()
 	err = exec.Command("ip", "tuntap", "add", "dev", hostDevName, "mode", "tap").Run()
 	if err != nil {
-		fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "Error creating host network:", err)
+		log.Println("[", request.ID, "]", "Error creating host network:", err)
 		return
 	}
 	exec.Command("sysctl", "-w", "net.ipv4.conf."+hostDevName+".proxy_arp=1").Run()
 	exec.Command("sysctl", "-w", "net.ipv6.conf."+hostDevName+".disable_ipv6=1").Run()
 	err = exec.Command("ip", "addr", "add", tapAddress+maskShort, "dev", hostDevName).Run()
 	if err != nil {
-		fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "Error adding ip address:", err)
+		log.Println("[", request.ID, "]", "Error adding ip address:", err)
 		return
 	}
 	err = exec.Command("ip", "link", "set", "dev", hostDevName, "up").Run()
 	if err != nil {
-		fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "Error setting host network up:", err)
+		log.Println("[", request.ID, "]", "Error setting host network up:", err)
 		return
 	}
 
@@ -163,11 +163,11 @@ func StartVM(codeURL string, request common.TestRequest) {
 	err = fcCmd.Start()
 	pid := fcCmd.Process.Pid
 	if err != nil {
-		fmt.Println("[", hostDevName, "]", "Error starting firecracker VM:", err)
+		log.Println("[", request.ID, "]", "Error starting firecracker VM:", err)
 		return
 	}
 
-	fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "Firecracker VM started!")
+	log.Println("[", request.ID, "]", "Firecracker VM started with pid:", pid)
 
 	// Move user's program to container user and change permissions
 	key, _ := os.ReadFile("/root/.ssh/id_rsa")
@@ -176,7 +176,7 @@ func StartVM(codeURL string, request common.TestRequest) {
 	var conn *ssh.Client
 
 	if err != nil {
-		fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "(PVKEY) Error creating ssh connection:", err)
+		log.Println("[", request.ID, "]", "(PVKEY) Error parsing private key:", err)
 		return
 	}
 
@@ -202,11 +202,11 @@ func StartVM(codeURL string, request common.TestRequest) {
 	}
 
 	if attempt > maxAttempts {
-		fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "(ATTEMPTS) Error creating ssh connection:", err)
+		log.Println("[", request.ID, "]", "(ATTEMPTS) Error creating ssh connection:", err)
 		return
 	}
 
-	fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "SSH connection successful!")
+	log.Println("[", request.ID, "]", "SSH connection successful!")
 
 	session, _ := conn.NewSession()
 
@@ -228,17 +228,17 @@ func StartVM(codeURL string, request common.TestRequest) {
 	}
 	command := strings.Join(commands, "; ")
 
-	fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "Running commands...")
+	log.Println("[", request.ID, "]", "Running commands...")
 
 	if err := session.Start(command); err != nil {
-		fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "Error running commands:", err.Error())
+		log.Println("[", request.ID, "]", "Error running commands:", err.Error())
 	}
 
 	session.Close()
 
 	time.Sleep(500 * time.Millisecond)
 
-	fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "Firecracker VM ready!")
+	log.Println("[", request.ID, "]", "Firecracker VM ready!")
 	vmAddresses[hostDevName] = fcAddress
 
 	startRam, _ := common.CalculateMemory(pid)
@@ -258,44 +258,44 @@ func StartVM(codeURL string, request common.TestRequest) {
 	delete(usedIps, nextHost)
 	delete(usedIps, nextHost2)
 	delete(vmAddresses, hostDevName)
-	fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "Stopped firecracker VM.")
+	log.Println("[", request.ID, "]", "Firecracker VM stopped.")
 }
 
 func createDisk(name string, codeURL string, extension string) error {
 	cmd := exec.Command("dd", "if=/dev/zero", "of="+name+".ext4", "bs=1M", "count=20")
 	err := cmd.Run()
 	if err != nil {
-		fmt.Println("[", name, time.Now().Format("15:04:05"), "]", err)
+		log.Println("[", name, "]", err)
 		return err
 	}
 	cmd = exec.Command("mkfs.ext4", name+".ext4")
 	err = cmd.Run()
 	if err != nil {
-		fmt.Println("[", name, time.Now().Format("15:04:05"), "]", err)
+		log.Println("[", name, "]", err)
 		return err
 	}
 	cmd = exec.Command("rm", "-rf", "/tmp/"+name)
 	err = cmd.Run()
 	if err != nil {
-		fmt.Println("[", name, time.Now().Format("15:04:05"), "]", err)
+		log.Println("[", name, "]", err)
 		return err
 	}
 	cmd = exec.Command("mkdir", "-p", "/tmp/"+name)
 	err = cmd.Run()
 	if err != nil {
-		fmt.Println("[", name, time.Now().Format("15:04:05"), "]", err)
+		log.Println("[", name, "]", err)
 		return err
 	}
 	cmd = exec.Command("mount", name+".ext4", "/tmp/"+name)
 	err = cmd.Run()
 	if err != nil {
-		fmt.Println("[", name, time.Now().Format("15:04:05"), "]", err)
+		log.Println("[", name, "]", err)
 		return err
 	}
 	cmd = exec.Command("cp", "/root/pepper-vm", "/tmp/"+name+"/pepper-vm")
 	err = cmd.Run()
 	if err != nil {
-		fmt.Println("[", name, time.Now().Format("15:04:05"), "]", err)
+		log.Println("[", name, "]", err)
 		return err
 	}
 	// Download user program
@@ -309,7 +309,7 @@ func createDisk(name string, codeURL string, extension string) error {
 	cmd = exec.Command("umount", "/tmp/"+name)
 	err = cmd.Run()
 	if err != nil {
-		fmt.Println("[", name, time.Now().Format("15:04:05"), "]", err)
+		log.Println("[", name, "]", err)
 		return err
 	}
 
@@ -318,12 +318,12 @@ func createDisk(name string, codeURL string, extension string) error {
 
 func StartTest(pid int, startMemory int, vmID string, testRequest common.TestRequest) {
 	_, ok := vmAddresses[vmID]
-	fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Starting test for VM", vmID, "at", vmAddresses[vmID])
+	log.Println("[", testRequest.ID, "]", "Starting test for VM", vmID, "at", vmAddresses[vmID])
 	if ok {
 		problemInfo, _ := FetchProblemInfo(WebsiteAddress + testRequest.InfoURL)
 		testCount := len(problemInfo.Tests)
 
-		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Problem info received:", problemInfo)
+		log.Println("[", testRequest.ID, "]", "Problem info received:", problemInfo)
 
 		// test purpose
 		data := common.VmInit{
@@ -335,7 +335,7 @@ func StartTest(pid int, startMemory int, vmID string, testRequest common.TestReq
 		problemSlug := testRequest.ProblemSlug
 		b, _ := json.Marshal(data)
 
-		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Sending init request to VM", vmID, "at", vmAddresses[vmID], "with data", string(b))
+		log.Println("[", testRequest.ID, "]", "Sending init request to VM", vmID, "at", vmAddresses[vmID], "with data", string(b))
 
 		// wait 100ms
 		time.Sleep(100 * time.Millisecond)
@@ -368,29 +368,29 @@ func StartTest(pid int, startMemory int, vmID string, testRequest common.TestReq
 			}
 		}(response.Body)
 
-		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Init request sent to VM", vmID, "at", vmAddresses[vmID])
+		log.Println("[", testRequest.ID, "]", "Init request sent to VM", vmID, "at", vmAddresses[vmID])
 
 		// TODO: Wait for the VM to confirm, if compile has failed, then send test results
 
 		for i := 0; i < testCount; i++ {
 			passed, testResponse, timeTaken, finalMemoryUsage := SendInput(i, pid, vmID, problemInfo.Tests[i].Type,
-				problemInfo.Tests[i].InputURL, problemInfo.Tests[i].OutputURL, testRequest.TimeLimit)
+				problemInfo.Tests[i].InputURL, problemInfo.Tests[i].OutputURL, testRequest.TimeLimit, testRequest.ID)
 
 			finalMemoryUsage -= startMemory
 			if !passed {
-				fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Test failed for VM", vmID, "at", vmAddresses[vmID])
+				log.Println("[", testRequest.ID, "]", "Test failed for VM", vmID, "at", vmAddresses[vmID])
 				go sendInnerTestResult(testRequest.ID, i, problemSlug, testResponse, timeTaken, finalMemoryUsage, true, false)
 				return
 			} else {
 				go sendInnerTestResult(testRequest.ID, i, problemSlug, "Test passed", timeTaken, finalMemoryUsage, i == (testCount-1), true)
 			}
 		}
-		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "All tests passed for VM", vmID, "at", vmAddresses[vmID])
+		log.Println("[", testRequest.ID, "]", "All tests passed for VM", vmID, "at", vmAddresses[vmID])
 	}
 }
 
 // SendInput Returns if the test passed, the response, the time taken and the final memory usage
-func SendInput(pid int, p int, vmID string, testType string, inputURL string, outputURL string, timeLimit int) (bool, string, int, int) {
+func SendInput(pid int, p int, vmID string, testType string, inputURL string, outputURL string, timeLimit int, testRequestId string) (bool, string, int, int) {
 	pbTimeout := time.Duration(timeLimit) * time.Second
 	input, _ := DownloadAsText(WebsiteAddress + inputURL)
 	output, _ := DownloadAsText(WebsiteAddress + outputURL)
@@ -418,8 +418,8 @@ func SendInput(pid int, p int, vmID string, testType string, inputURL string, ou
 	}(response.Body)
 	start := time.Now().UnixMilli()
 
-	fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Input sent to VM", vmID, "at", vmAddresses[vmID])
-	fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Waiting for result from VM", vmID, "at", vmAddresses[vmID])
+	log.Println("[", testRequestId, "]", "Input sent to VM", vmID, "at", vmAddresses[vmID])
+	log.Println("[", testRequestId, "]", "Waiting for result from VM", vmID, "at", vmAddresses[vmID])
 
 	// Wait for the result on the websocket for max 1 second
 	u := url.URL{Scheme: "ws", Host: vmAddresses[vmID] + ":8888", Path: "/ws"}
@@ -445,26 +445,26 @@ func SendInput(pid int, p int, vmID string, testType string, inputURL string, ou
 	if err != nil {
 		// is it a timeout?
 		if err, ok := err.(net.Error); ok && err.Timeout() {
-			fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Timeout on VM", vmID, "at", vmAddresses[vmID])
+			log.Println("[", testRequestId, "]", "Timeout on VM", vmID, "at", vmAddresses[vmID])
 			memory, _ := common.CalculateMemory(pid)
 			return false, "Timeout", int(timeout.Milliseconds()), memory
 		}
 		if duration > pbTimeout.Milliseconds() {
-			fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Timeout on VM", vmID, "at", vmAddresses[vmID])
+			log.Println("[", testRequestId, "]", "Timeout on VM", vmID, "at", vmAddresses[vmID])
 			memory, _ := common.CalculateMemory(pid)
 			return false, "Timeout", int(duration), memory
 		}
-		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "ReadMessage failed:", err)
+		log.Println("[", testRequestId, "]", "ReadMessage failed:", err)
 		memory, _ := common.CalculateMemory(pid)
 		return false, "Fatal error", int(duration), memory
 	}
 	if duration > pbTimeout.Milliseconds() {
-		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Time limit exceeded", vmID, "at", vmAddresses[vmID])
+		log.Println("[", testRequestId, "]", "Time limit exceeded", vmID, "at", vmAddresses[vmID])
 		memory, _ := common.CalculateMemory(pid)
 		return false, "Time limit exceeded", int(duration), memory
 	}
 	if receiveType != websocket.TextMessage {
-		fmt.Printf("received type(%d) != websocket.TextMessage(%d)\n", receiveType, websocket.TextMessage)
+		log.Println("[", testRequestId, "]", "received type(", receiveType, ") != websocket.TextMessage(", websocket.TextMessage, ")")
 		memory, _ := common.CalculateMemory(pid)
 		return false, "Fatal error", int(duration), memory
 	}
@@ -475,16 +475,11 @@ func SendInput(pid int, p int, vmID string, testType string, inputURL string, ou
 
 	//fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Received output:", rspStr, "expected:", output)
 	if rspStr == outputFix || string(rsp) == output || common.NormalizeLineEndings(rspStr) == common.NormalizeLineEndings(outputFix) {
-		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Test passed!")
+		log.Println("[", testRequestId, "]", "Test passed for VM", vmID, "at", vmAddresses[vmID])
 		memory, _ := common.CalculateMemory(pid)
 		return true, "", int(duration), memory
 	} else {
-		// write the output to a file
-		os.WriteFile("output.txt", []byte(rspStr), 0644)
-		// expected
-		os.WriteFile("expected.txt", []byte(outputFix), 0644)
-
-		fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Test failed!")
+		log.Println("[", testRequestId, "]", "Test failed for VM", vmID, "at", vmAddresses[vmID])
 		memory, _ := common.CalculateMemory(pid)
 		return false, "Wrong answer on test " + strconv.Itoa(p), int(duration), memory
 	}

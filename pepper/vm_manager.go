@@ -67,7 +67,7 @@ func StartVM(codeURL string, request common.TestRequest) {
 	fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "Found fcAddress:", fcAddress)
 
 	// Edit config
-	b, err := os.ReadFile("/root/vm_config.json")
+	b, err := os.ReadFile("/etc/algotn/vm_config.json")
 	if err != nil {
 		return
 	}
@@ -79,20 +79,20 @@ func StartVM(codeURL string, request common.TestRequest) {
 
 	config := string(b)
 	// new mac fcAddress is the ip fcAddress in hex and 00 00 at the end
-	config = strings.Replace(config, "kernelBootArgs", kernelBootArgs, 1)                        // kernel boot args
-	config = strings.Replace(config, "AA:BB:CC:DD:EE:FF", ipv4ToHex(fcAddress)+":00:00", 1)      // mac fcAddress
-	config = strings.Replace(config, "2048", "2048", 1)                                          // ram
-	config = strings.Replace(config, "fc0", hostDevName, 1)                                      // host network name
-	config = strings.Replace(config, "/root/rootfs.ext4", "/root/rootfs"+hostDevName+".ext4", 1) // disk location
-	config = strings.Replace(config, "/root/fc1-disk.ext4", "/root/"+hostDevName+".ext4", 1)     // additional disk location
+	config = strings.Replace(config, "kernelBootArgs", kernelBootArgs, 1)                       // kernel boot args
+	config = strings.Replace(config, "AA:BB:CC:DD:EE:FF", ipv4ToHex(fcAddress)+":00:00", 1)     // mac fcAddress
+	config = strings.Replace(config, "2048", "2048", 1)                                         // ram
+	config = strings.Replace(config, "fc0", hostDevName, 1)                                     // host network name
+	config = strings.Replace(config, "/root/rootfs.ext4", "/tmp/rootfs"+hostDevName+".ext4", 1) // disk location
+	config = strings.Replace(config, "/root/fc1-disk.ext4", "/tmp/"+hostDevName+".ext4", 1)     // additional disk location
 
 	//defer os.Remove("/root/" + hostDevName + ".ext4")
 
 	fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "Temp config adjusted.")
 
 	// Copy rootfs
-	exec.Command("rm", "-f", "/root/rootfs"+hostDevName+".ext4")
-	err = exec.Command("cp", "/root/rootfs.ext4", "/root/rootfs"+hostDevName+".ext4").Run()
+	exec.Command("rm", "-f", "/etc/algotn/rootfs"+hostDevName+".ext4")
+	err = exec.Command("cp", "/etc/algotn/rootfs.ext4", "/etc/algotn/rootfs"+hostDevName+".ext4").Run()
 	if err != nil {
 		return
 	}
@@ -159,7 +159,7 @@ func StartVM(codeURL string, request common.TestRequest) {
 		}
 	}()
 
-	fcCmd := exec.Command("/root/firecracker-bin", "--api-sock", socket, "--config-file", configFile)
+	fcCmd := exec.Command("/etc/algotn/firecracker-bin", "--api-sock", socket, "--config-file", configFile)
 	err = fcCmd.Start()
 	pid := fcCmd.Process.Pid
 	if err != nil {
@@ -170,7 +170,7 @@ func StartVM(codeURL string, request common.TestRequest) {
 	fmt.Println("[", hostDevName, time.Now().Format("15:04:05"), "]", "Firecracker VM started!")
 
 	// Move user's program to container user and change permissions
-	key, _ := os.ReadFile("/root/.ssh/id_rsa")
+	key, _ := os.ReadFile("/etc/algotn/id_rsa")
 	signer, err := ssh.ParsePrivateKey(key)
 
 	var conn *ssh.Client
@@ -250,8 +250,8 @@ func StartVM(codeURL string, request common.TestRequest) {
 	session, _ = conn.NewSession()
 	session.Run("reboot")
 	fcCmd.Process.Kill()
-	exec.Command("rm", "-f", "/root/rootfs"+hostDevName+".ext4").Run()
-	exec.Command("rm", "-f", "/root/"+hostDevName+".ext4").Run()
+	exec.Command("rm", "-f", "/etc/algotn/rootfs"+hostDevName+".ext4").Run()
+	exec.Command("rm", "-f", "/etc/algotn/"+hostDevName+".ext4").Run()
 
 	delete(usedIps, hostDevName)
 	delete(usedIps, tapHost)
@@ -292,7 +292,7 @@ func createDisk(name string, codeURL string, extension string) error {
 		fmt.Println("[", name, time.Now().Format("15:04:05"), "]", err)
 		return err
 	}
-	cmd = exec.Command("cp", "/root/pepper-vm", "/tmp/"+name+"/pepper-vm")
+	cmd = exec.Command("cp", "/etc/algotn/pepper-vm", "/tmp/"+name+"/pepper-vm")
 	err = cmd.Run()
 	if err != nil {
 		fmt.Println("[", name, time.Now().Format("15:04:05"), "]", err)

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/pbnjay/memory"
 	"github.com/redis/go-redis/v9"
+	"log"
 	"strconv"
 )
 
@@ -23,7 +24,7 @@ func Connect(address string, password string) {
 		Password: password,
 		DB:       0,
 	})
-	fmt.Println("Connected to Redis.")
+	log.Println("Connected to Redis.")
 	go listen()
 }
 
@@ -41,7 +42,7 @@ func listen() {
 
 			if err == nil {
 				if common.SumMapValues(ActiveVMs) > MaxRam || memory.FreeMemory() < 4096 {
-					fmt.Println("Not enough RAM to start VM, waiting...")
+					log.Println("Not enough RAM to start VM, waiting...")
 					TestQueue <- test
 					continue
 				}
@@ -69,8 +70,6 @@ func sendInnerTestResult(testId string, testIndex int, problemSlug string, resul
 		return
 	}
 
-	fmt.Println(string(bytes))
-
 	if sendFinalResult {
 		go sendTestResult(testId, problemSlug, result, finalPassed)
 	} else {
@@ -94,8 +93,6 @@ func sendTestResult(testId string, problemSlug string, info string, allPassed bo
 	if err != nil {
 		return
 	}
-
-	fmt.Println(string(bytes))
 
 	err = rdb.Publish(ctx, "pepper-test-results", string(bytes)).Err()
 	if err != nil {

@@ -102,6 +102,7 @@ func StartVM(codeURL string, request common.TestRequest) {
 	// Share user's program and test program using initrd
 	err = createDisk(hostDevName, codeURL, request.Extension)
 	if err != nil {
+		log.Println("[", request.ID, "]", "There was an error creating the disk, aborting.")
 		return
 	}
 	//exec.Command("cd root/" + folder + " ; find . -print0 | cpio --null --create --verbose --format=newc > " + hostDevName + ".cpio")

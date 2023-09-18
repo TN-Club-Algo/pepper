@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"log"
 	"os"
 )
@@ -16,5 +17,6 @@ func init() {
 	}
 
 	logFile, _ = os.OpenFile("/var/log/pepper/latest.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
-	log.SetOutput(logFile)
+	mw := io.MultiWriter(os.Stdout, logFile)
+	log.SetOutput(mw)
 }

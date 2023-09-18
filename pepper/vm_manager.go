@@ -269,12 +269,6 @@ func createDisk(name string, codeURL string, extension string) error {
 		log.Println("[", name, "]", err)
 		return err
 	}
-	cmd = exec.Command("mkfs.ext4", name+".ext4")
-	err = cmd.Run()
-	if err != nil {
-		log.Println("[", name, "]", err)
-		return err
-	}
 	cmd = exec.Command("rm", "-rf", "/tmp/"+name)
 	err = cmd.Run()
 	if err != nil {
@@ -287,12 +281,6 @@ func createDisk(name string, codeURL string, extension string) error {
 		log.Println("[", name, "]", err)
 		return err
 	}
-	cmd = exec.Command("mount", name+".ext4", "/tmp/"+name)
-	err = cmd.Run()
-	if err != nil {
-		log.Println("[", name, "]", err)
-		return err
-	}
 	cmd = exec.Command("cp", "/etc/algotn/pepper-vm", "/tmp/"+name+"/pepper-vm")
 	err = cmd.Run()
 	if err != nil {
@@ -300,14 +288,10 @@ func createDisk(name string, codeURL string, extension string) error {
 		return err
 	}
 	// Download user program
-	DownloadAndSaveFile(WebsiteAddress+codeURL, "/tmp/"+name, extension) /*
-		cmd = exec.Command("curl", WebsiteAddress+codeURL, "-O", "-H", "x-auth-secret-key "+Secret, "--output-dir", "/tmp/"+name)
-		err = cmd.Run()
-		if err != nil {
-			fmt.Println("[", name, time.Now().Format("15:04:05"), "]", err)
-			return err
-		}*/
-	cmd = exec.Command("umount", "/tmp/"+name)
+	DownloadAndSaveFile(WebsiteAddress+codeURL, "/tmp/"+name, extension)
+
+	// Create ext4
+	cmd = exec.Command("mkfs.ext4", name+".ext4", "-d", "/tmp/"+name)
 	err = cmd.Run()
 	if err != nil {
 		log.Println("[", name, "]", err)

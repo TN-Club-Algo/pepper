@@ -91,8 +91,8 @@ func StartVM(codeURL string, request common.TestRequest) {
 	log.Println("[", request.ID, "]", "Temp config edited.")
 
 	// Copy rootfs
-	exec.Command("rm", "-f", "/etc/algotn/rootfs"+hostDevName+".ext4")
-	err = exec.Command("cp", "/etc/algotn/rootfs.ext4", "/etc/algotn/rootfs"+hostDevName+".ext4").Run()
+	exec.Command("rm", "-f", "/tmp/rootfs"+hostDevName+".ext4")
+	err = exec.Command("cp", "/etc/algotn/rootfs.ext4", "/tmp/rootfs"+hostDevName+".ext4").Run()
 	if err != nil {
 		return
 	}
@@ -251,8 +251,8 @@ func StartVM(codeURL string, request common.TestRequest) {
 	session, _ = conn.NewSession()
 	session.Run("reboot")
 	fcCmd.Process.Kill()
-	exec.Command("rm", "-f", "/etc/algotn/rootfs"+hostDevName+".ext4").Run()
-	exec.Command("rm", "-f", "/etc/algotn/"+hostDevName+".ext4").Run()
+	exec.Command("rm", "-f", "/tmp/rootfs"+hostDevName+".ext4").Run()
+	exec.Command("rm", "-f", "/tmp/"+hostDevName+".ext4").Run()
 
 	delete(usedIps, hostDevName)
 	delete(usedIps, tapHost)
@@ -263,7 +263,7 @@ func StartVM(codeURL string, request common.TestRequest) {
 }
 
 func createDisk(name string, codeURL string, extension string) error {
-	cmd := exec.Command("dd", "if=/dev/zero", "of="+name+".ext4", "bs=1M", "count=20")
+	cmd := exec.Command("dd", "if=/dev/zero", "of=/tmp/"+name+".ext4", "bs=1M", "count=20")
 	err := cmd.Run()
 	if err != nil {
 		log.Println("[", name, "]", err)
@@ -291,7 +291,7 @@ func createDisk(name string, codeURL string, extension string) error {
 	DownloadAndSaveFile(WebsiteAddress+codeURL, "/tmp/"+name, extension)
 
 	// Create ext4
-	cmd = exec.Command("mkfs.ext4", name+".ext4", "-d", "/tmp/"+name)
+	cmd = exec.Command("mkfs.ext4", "/tmp/"+name+".ext4", "-d", "/tmp/"+name)
 	err = cmd.Run()
 	if err != nil {
 		log.Println("[", name, "]", err)

@@ -3,6 +3,7 @@ package main
 import (
 	"AlgoTN/common"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 )
@@ -16,13 +17,13 @@ var (
 )
 
 func main() {
-	fmt.Println("Initializing Pepper...")
+	log.Println("Initializing Pepper...")
 	Connect(RedisAddress, RedisPassword)
 
 	// Tick
 	go tick()
 
-	fmt.Println("Pepper initialized, type 'help' for a list of commands.")
+	log.Println("Pepper initialized, type 'help' for a list of commands.")
 	var cmd string
 	for {
 		_, err := fmt.Scanln(&cmd)
@@ -31,7 +32,7 @@ func main() {
 				os.Exit(0)
 				return
 			} else {
-				fmt.Println("Unknown command.")
+				log.Println("Unknown command.")
 			}
 		}
 	}

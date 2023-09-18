@@ -4,7 +4,6 @@ import (
 	"AlgoTN/common"
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/pbnjay/memory"
 	"github.com/redis/go-redis/v9"
 	"log"
@@ -35,7 +34,7 @@ func listen() {
 	for {
 		msg, err := pubsub.ReceiveMessage(ctx)
 		if err == nil {
-			fmt.Println("Received test raw:", msg.Payload)
+			log.Println("Received test raw:", msg.Payload)
 
 			test := common.TestRequest{}
 			err = json.Unmarshal([]byte(msg.Payload), &test)
@@ -75,7 +74,7 @@ func sendInnerTestResult(testId string, testIndex int, problemSlug string, resul
 	} else {
 		err = rdb.Publish(ctx, "pepper-inner-test-results", string(bytes)).Err()
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 	}
@@ -96,7 +95,7 @@ func sendTestResult(testId string, problemSlug string, info string, allPassed bo
 
 	err = rdb.Publish(ctx, "pepper-test-results", string(bytes)).Err()
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return
 	}
 }

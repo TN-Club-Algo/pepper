@@ -266,35 +266,39 @@ func createDisk(name string, codeURL string, extension string) error {
 	cmd := exec.Command("dd", "if=/dev/zero", "of=/tmp/"+name+".ext4", "bs=1M", "count=20")
 	err := cmd.Run()
 	if err != nil {
-		log.Println("[", name, "]", err)
+		log.Println("[", name, "]", "(dd)", err)
 		return err
 	}
 	cmd = exec.Command("rm", "-rf", "/tmp/"+name)
 	err = cmd.Run()
 	if err != nil {
-		log.Println("[", name, "]", err)
+		log.Println("[", name, "]", "(rm)", err)
 		return err
 	}
 	cmd = exec.Command("mkdir", "-p", "/tmp/"+name)
 	err = cmd.Run()
 	if err != nil {
-		log.Println("[", name, "]", err)
+		log.Println("[", name, "]", "(mkdir)", err)
 		return err
 	}
 	cmd = exec.Command("cp", "/etc/algotn/pepper-vm", "/tmp/"+name+"/pepper-vm")
 	err = cmd.Run()
 	if err != nil {
-		log.Println("[", name, "]", err)
+		log.Println("[", name, "]", "(cp)", err)
 		return err
 	}
 	// Download user program
-	DownloadAndSaveFile(WebsiteAddress+codeURL, "/tmp/"+name, extension)
+	err = DownloadAndSaveFile(WebsiteAddress+codeURL, "/tmp/"+name, extension)
+	if err != nil {
+		log.Println("[", name, "]", "(download)", err)
+		return err
+	}
 
 	// Create ext4
 	cmd = exec.Command("mkfs.ext4", "/tmp/"+name+".ext4", "-d", "/tmp/"+name)
 	err = cmd.Run()
 	if err != nil {
-		log.Println("[", name, "]", err)
+		log.Println("[", name, "]", "(mkfs)", err)
 		return err
 	}
 

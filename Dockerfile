@@ -2,7 +2,8 @@ FROM ubuntu:latest
 
 LABEL author="Alexandre Duchesne"
 
-RUN apt-get update && apt-get install -y iproute2 curl
+RUN apt-get update && apt-get install -y curl iproute2 iputils-ping
+RUN modprobe tun
 
 # Add executable
 COPY pepper/pepper /pepper

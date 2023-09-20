@@ -110,10 +110,11 @@ func StartVM(codeURL string, request common.TestRequest) {
 	log.Println("[", request.ID, "]", "Temp disk created with user program and pepper-vm.")
 
 	// Create firecracker VM config
-	configFile := "temp_vm_config_" + hostDevName + ".json"
+	configFile := "/tmp/temp_vm_config_" + hostDevName + ".json"
 	err = os.WriteFile(configFile, []byte(config), 0600)
 	//defer os.Remove(configFile)
 	if err != nil {
+		log.Println("[", request.ID, "]", "Error creating temp config:", err)
 		return
 	}
 

@@ -363,7 +363,7 @@ func StartTest(pid int, startMemory int, vmID string, testRequest common.TestReq
 		// TODO: Wait for the VM to confirm, if compile has failed, then send test results
 
 		for i := 0; i < testCount; i++ {
-			passed, testResponse, timeTaken, finalMemoryUsage := SendInput(i, pid, vmID, problemInfo.Tests[i].Type,
+			passed, testResponse, timeTaken, finalMemoryUsage := SendInput(pid, i, vmID, problemInfo.Tests[i].Type,
 				problemInfo.Tests[i].InputURL, problemInfo.Tests[i].OutputURL, testRequest.TimeLimit, testRequest.ID)
 
 			finalMemoryUsage -= startMemory

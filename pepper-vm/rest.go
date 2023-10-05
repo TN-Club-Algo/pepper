@@ -266,9 +266,8 @@ func startTests(vmInit common.VmInit) {
 				cmd := exec.Command("/root/" + strings.Split(vmInit.UserProgram, ".")[0])
 				cmd.Dir = "/root"
 				//cmd.Dir = "/home/container/program"
-				inputData := input
 
-				bytes := []byte(inputData)
+				bytes := []byte(input)
 
 				//fmt.Println("Input data is", inputData)
 
@@ -284,22 +283,10 @@ func startTests(vmInit common.VmInit) {
 				if err != nil {
 					fmt.Println("Error starting command:", err)
 				}
-
-				const chunkSize = 1024
-				var bytesRead int
-
-				for bytesRead < len(bytes) {
-					n, err := stdin.Write(bytes[bytesRead : bytesRead+chunkSize])
-					if err != nil {
-						fmt.Println("Error writing data to stdin:", err)
-						break
-					}
-					bytesRead += n
-				}
-				/*_, err = stdin.Write(bytes)
+				_, err = stdin.Write(bytes)
 				if err != nil {
 					fmt.Println("Error writing data to stdin:", err)
-				}*/
+				}
 				err = stdin.Close()
 				if err != nil {
 					fmt.Println("Error closing stdin pipe:", err)

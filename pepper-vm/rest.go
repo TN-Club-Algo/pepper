@@ -268,6 +268,8 @@ func startTests(vmInit common.VmInit) {
 				//cmd.Dir = "/home/container/program"
 				inputData := input
 
+				bytes := []byte(inputData)
+
 				//fmt.Println("Input data is", inputData)
 
 				stdin, err := cmd.StdinPipe()
@@ -282,7 +284,7 @@ func startTests(vmInit common.VmInit) {
 				if err != nil {
 					fmt.Println("Error starting command:", err)
 				}
-				_, err = stdin.Write([]byte(inputData))
+				_, err = stdin.Write(bytes)
 				if err != nil {
 					fmt.Println("Error writing data to stdin:", err)
 				}

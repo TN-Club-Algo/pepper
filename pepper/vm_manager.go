@@ -408,8 +408,7 @@ func SendInput(pid int, p int, vmID string, testType string, inputURL string, ou
 	}(response.Body)
 	start := time.Now().UnixMilli()
 
-	log.Println("[", testRequestId, "]", "Input sent to VM", vmID, "at", vmAddresses[vmID])
-	log.Println("[", testRequestId, "]", "Waiting for result from VM", vmID, "at", vmAddresses[vmID])
+	log.Println("[", testRequestId, "]", "(", strconv.FormatInt(int64(p+1), 10), ")", "Input sent to VM", vmID, "at", vmAddresses[vmID])
 
 	// Wait for the result on the websocket for max 1 second
 	u := url.URL{Scheme: "ws", Host: vmAddresses[vmID] + ":8888", Path: "/ws"}
@@ -424,6 +423,7 @@ func SendInput(pid int, p int, vmID string, testType string, inputURL string, ou
 		log.Fatalf("write: %v", err)
 		return false, "Fatal error", -1, -1
 	}
+	log.Println("[", testRequestId, "]", "Waiting for result from VM", vmID, "at", vmAddresses[vmID])
 
 	timeout := pbTimeout * 3
 	c.SetReadDeadline(time.Now().Add(timeout))
@@ -471,6 +471,6 @@ func SendInput(pid int, p int, vmID string, testType string, inputURL string, ou
 	} else {
 		log.Println("[", testRequestId, "]", "Test failed for VM", vmID, "at", vmAddresses[vmID])
 		memory, _ := common.CalculateMemory(pid)
-		return false, "Wrong answer on test " + strconv.Itoa(p), int(duration), memory
+		return false, "Wrong answer on test " + strconv.Itoa(p+1), int(duration), memory
 	}
 }

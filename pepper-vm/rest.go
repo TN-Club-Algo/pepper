@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"io"
+	"log"
 	"net/http"
 	"os/exec"
 	"strconv"
@@ -112,7 +113,7 @@ func startTests(vmInit common.VmInit) {
 			// java
 			if true {
 				//if input.Type == common.TestTypeInputOutput {
-				fmt.Println("Test type is input/output for Java")
+				log.Println("Test type is input/output for Java")
 
 				cmd := exec.Command("java", "-jar", vmInit.UserProgram)
 				cmd.Dir = "/root"
@@ -161,7 +162,7 @@ func startTests(vmInit common.VmInit) {
 			// cpp
 			if true {
 				//if input.Type == common.TestTypeInputOutput {
-				fmt.Println("Test type is input/output for C++")
+				log.Println("Test type is input/output for C++")
 
 				cmd := exec.Command("/root/" + strings.Split(vmInit.UserProgram, ".")[0])
 				cmd.Dir = "/root"
@@ -210,7 +211,7 @@ func startTests(vmInit common.VmInit) {
 			// python
 			if true {
 				//if input.Type == common.TestTypeInputOutput {
-				fmt.Println("Test type is input/output for Python")
+				log.Println("Test type is input/output for Python")
 
 				cmd := exec.Command("python", vmInit.UserProgram) // let's assume it isn't a folder for now
 				cmd.Dir = "/root"
@@ -261,7 +262,7 @@ func startTests(vmInit common.VmInit) {
 			// c
 			if true {
 				//if input.Type == common.TestTypeInputOutput {
-				fmt.Println("Test type is input/output for C")
+				log.Println("Test type is input/output for C")
 
 				cmd := exec.Command("/root/" + strings.Split(vmInit.UserProgram, ".")[0])
 				cmd.Dir = "/root"
@@ -311,7 +312,7 @@ func startTests(vmInit common.VmInit) {
 			// golang
 			if true {
 				//if input.Type == common.TestTypeInputOutput {
-				fmt.Println("Test type is input/output for Golang")
+				log.Println("Test type is input/output for Golang")
 
 				cmd := exec.Command("/root/" + strings.Split(vmInit.UserProgram, ".")[0])
 				cmd.Dir = "/root"

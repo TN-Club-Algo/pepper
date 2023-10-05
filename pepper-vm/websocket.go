@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -25,6 +26,7 @@ func newUpgrader() *websocket.Upgrader {
 		if string(data) == "output" {
 			// wait for the channel containing the output
 			output := <-outputChan
+			log.Println("Output was received")
 			c.WriteMessage(messageType, output)
 		}
 	})

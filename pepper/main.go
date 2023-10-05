@@ -14,6 +14,8 @@ var (
 	Secret         = common.GetEnv("API_SECRET", "api_secret")
 	RedisAddress   = common.GetEnv("REDIS_ADDRESS_PORT", "127.0.0.1:6379")
 	RedisPassword  = common.GetEnv("REDIS_PASS", "")
+
+	StopVms = true
 )
 
 func main() {
@@ -31,6 +33,9 @@ func main() {
 			if cmd == "exit" || cmd == "stop" {
 				os.Exit(0)
 				return
+			} else if cmd == "stopvm-status" {
+				StopVms = !StopVms
+				log.Println("StopVms is now", StopVms)
 			} else {
 				log.Println("Unknown command.")
 			}

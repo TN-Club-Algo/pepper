@@ -249,18 +249,22 @@ func StartVM(codeURL string, request common.TestRequest) {
 	StartTest(pid, startRam, hostDevName, request)
 
 	// Cleanup
-	session, _ = conn.NewSession()
-	session.Run("reboot")
-	fcCmd.Process.Kill()
-	exec.Command("rm", "-f", "/tmp/rootfs"+hostDevName+".ext4").Run()
-	exec.Command("rm", "-f", "/tmp/"+hostDevName+".ext4").Run()
+	if StopVms {
+		session, _ = conn.NewSession()
+		session.Run("reboot")
+		fcCmd.Process.Kill()
+		exec.Command("rm", "-f", "/tmp/rootfs"+hostDevName+".ext4").Run()
+		exec.Command("rm", "-f", "/tmp/"+hostDevName+".ext4").Run()
 
-	delete(usedIps, hostDevName)
-	delete(usedIps, tapHost)
-	delete(usedIps, nextHost)
-	delete(usedIps, nextHost2)
-	delete(vmAddresses, hostDevName)
-	log.Println("[", request.ID, "]", "Firecracker VM stopped.")
+		delete(usedIps, hostDevName)
+		delete(usedIps, tapHost)
+		delete(usedIps, nextHost)
+		delete(usedIps, nextHost2)
+		delete(vmAddresses, hostDevName)
+		log.Println("[", request.ID, "]", "Firecracker VM stopped.")
+	} else {
+		log.Println("[", request.ID, "]", "Firecracker VM was not stopped since StopVms=false.")
+	}
 }
 
 func createDisk(name string, codeURL string, extension string) error {

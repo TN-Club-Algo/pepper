@@ -284,10 +284,22 @@ func startTests(vmInit common.VmInit) {
 				if err != nil {
 					fmt.Println("Error starting command:", err)
 				}
-				_, err = stdin.Write(bytes)
+
+				const chunkSize = 1024
+				var bytesRead int
+
+				for bytesRead < len(bytes) {
+					n, err := stdin.Write(bytes[bytesRead : bytesRead+chunkSize])
+					if err != nil {
+						fmt.Println("Error writing data to stdin:", err)
+						break
+					}
+					bytesRead += n
+				}
+				/*_, err = stdin.Write(bytes)
 				if err != nil {
 					fmt.Println("Error writing data to stdin:", err)
-				}
+				}*/
 				err = stdin.Close()
 				if err != nil {
 					fmt.Println("Error closing stdin pipe:", err)

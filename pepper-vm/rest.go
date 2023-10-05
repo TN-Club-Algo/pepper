@@ -54,7 +54,7 @@ func initTests(c *gin.Context) {
 		return
 	}
 
-	fmt.Println("Received init request with data", vmInit)
+	log.Println("Received init request with data", vmInit)
 
 	// Compile program
 	compileAndContinue(vmInit)
@@ -63,7 +63,7 @@ func initTests(c *gin.Context) {
 }
 
 func compileAndContinue(vmInit common.VmInit) {
-	fmt.Println("Compiling program")
+	log.Println("Compiling program")
 	switch vmInit.ProgramType {
 	case common.JAVA:
 		// javac
@@ -242,6 +242,7 @@ func startTests(vmInit common.VmInit) {
 				if err != nil {
 					fmt.Println("Error closing stdin pipe:", err)
 				}
+				log.Println("Input written to stdin")
 				output, err := io.ReadAll(pipe)
 				if err != nil {
 					fmt.Println("Error reading stdout pipe:", err)
@@ -292,6 +293,7 @@ func startTests(vmInit common.VmInit) {
 				if err != nil {
 					fmt.Println("Error closing stdin pipe:", err)
 				}
+				log.Println("Input written to stdin")
 				output, err := io.ReadAll(pipe)
 				if err != nil {
 					fmt.Println("Error reading stdout pipe:", err)

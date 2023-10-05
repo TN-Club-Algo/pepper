@@ -50,7 +50,7 @@ func onWebsocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	conn.SetReadDeadline(time.Time{})
-	fmt.Println("OnOpen:", conn.RemoteAddr().String())
+	log.Println("OnOpen:", conn.RemoteAddr().String())
 }
 
 func StartWebSocketServer() {

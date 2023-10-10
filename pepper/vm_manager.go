@@ -468,7 +468,8 @@ func SendInput(pid int, p int, vmID string, testType string, inputURL string, ou
 	outputFix := strings.TrimSpace(output)
 
 	//fmt.Println("[", vmID, time.Now().Format("15:04:05"), "]", "Received output:", rspStr, "expected:", output)
-	if rspStr == outputFix || string(rsp) == output || common.NormalizeLineEndings(rspStr) == common.NormalizeLineEndings(outputFix) {
+	if rspStr == outputFix {
+		//if rspStr == outputFix || string(rsp) == output || common.NormalizeLineEndings(rspStr) == common.NormalizeLineEndings(outputFix) {
 		log.Println("[", testRequestId, "]", "Test passed for VM", vmID, "at", vmAddresses[vmID])
 		memory, _ := common.CalculateMemory(pid)
 		return true, "", int(duration), memory

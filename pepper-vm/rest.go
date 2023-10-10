@@ -149,6 +149,7 @@ func startTests(vmInit common.VmInit) {
 				err = cmd.Wait()
 				if err != nil {
 					fmt.Println("Error waiting for the command to exit:", err)
+					output = []byte("")
 				}
 
 				//fmt.Println("Output is", string(output))
@@ -198,6 +199,7 @@ func startTests(vmInit common.VmInit) {
 				err = cmd.Wait()
 				if err != nil {
 					fmt.Println("Error waiting for the command to exit:", err)
+					output = []byte("")
 				}
 
 				//fmt.Println("Output is", string(output))
@@ -250,6 +252,7 @@ func startTests(vmInit common.VmInit) {
 				err = cmd.Wait()
 				if err != nil {
 					fmt.Println("Error waiting for the command to exit:", err)
+					output = []byte("")
 				}
 
 				//fmt.Println("Output is", string(output))
@@ -301,6 +304,7 @@ func startTests(vmInit common.VmInit) {
 				err = cmd.Wait()
 				if err != nil {
 					fmt.Println("Error waiting for the command to exit:", err)
+					output = []byte("")
 				}
 
 				//fmt.Println("Output is", string(output))
@@ -350,6 +354,7 @@ func startTests(vmInit common.VmInit) {
 				err = cmd.Wait()
 				if err != nil {
 					fmt.Println("Error waiting for the command to exit:", err)
+					output = []byte("")
 				}
 
 				//fmt.Println("Output is", string(output))
